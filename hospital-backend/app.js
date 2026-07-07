@@ -14,6 +14,9 @@ const appointmentRoutes = require("./src/routes/appointment.routes");
 const medicalRecordRoutes = require("./src/routes/medicalRecord.routes");
 const medicineRoutes = require("./src/routes/medicine.routes");
 const prescriptionRoutes = require("./src/routes/prescription.routes");
+const pharmacyRoutes = require("./src/routes/pharmacy.routes");
+const labRoutes = require("./src/routes/lab.routes");
+const billingRoutes = require("./src/routes/billing.routes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
@@ -51,6 +54,9 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/medical-records", medicalRecordRoutes);
 app.use("/api/medicines", medicineRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/pharmacy", pharmacyRoutes);
+app.use("/api/laboratory", labRoutes);
+app.use("/api/billing", billingRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
