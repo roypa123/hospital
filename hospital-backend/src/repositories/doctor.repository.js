@@ -22,7 +22,11 @@ class DoctorRepository {
   }
 
   async findByUserId(userId) {
-    return await db("doctors").where({ user_id: userId }).first();
+    return await db("doctors")
+      .join("users", "doctors.user_id", "users.id")
+      .where("doctors.user_id", userId)
+      .select("doctors.*", "users.first_name", "users.last_name", "users.email")
+      .first();
   }
 
   async findAll(filters = {}) {

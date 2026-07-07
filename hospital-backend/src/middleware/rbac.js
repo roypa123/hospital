@@ -26,15 +26,22 @@ function authenticate(req, res, next) {
  * Middleware to enforce that the user holds a specific role
  * @param {string} role Name of required role (e.g. 'ADMIN')
  */
-function requireRole(role) {
+function requireRole(roles) {
+  const rolesArray = Array.isArray(roles) ? roles : [roles];
   return (req, res, next) => {
     if (!req.user || !req.user.roles) {
       return next(new UnauthorizedError("Authentication required"));
     }
 
-    const hasRole = req.user.roles.includes(role.toUpperCase());
+    const hasRole = req.user.roles.some((r) =>
+      rolesArray.map((x) => x.toUpperCase()).includes(r)
+    );
     if (!hasRole) {
-      return next(new ForbiddenError(`Access denied. Role '${role}' required.`));
+      return next(
+        new ForbiddenError(
+          `Access denied. One of roles '${rolesArray.join(", ")}' required.`
+        )
+      );
     }
 
     return next();

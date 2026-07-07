@@ -112,7 +112,12 @@ class AppointmentController {
       const isStaffOrAdmin = req.user.roles.some((r) =>
         ["ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"].includes(r)
       );
-      const isSelf = await this._checkIsSelfPatient(appointment.patient_id, req.user.id);
+      
+      let isSelf = false;
+      if (!isStaffOrAdmin && req.user.roles.includes("PATIENT")) {
+        const patient = await patientRepository.findByUserId(req.user.id);
+        isSelf = patient && patient.id === appointment.patient_id;
+      }
 
       if (!isStaffOrAdmin && !isSelf) {
         throw new ForbiddenError("Forbidden: You cannot access another patient's appointment details");
@@ -142,12 +147,6 @@ class AppointmentController {
     } catch (error) {
       return next(error);
     }
-  }
-
-  // Helper
-  async _checkIsSelfPatient(patientId, userId) {
-    const patient = await patientRepository.findByUserId(userId);
-    return patient && patient.id === patientId;
   }
 }
 
