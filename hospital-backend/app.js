@@ -18,6 +18,7 @@ const pharmacyRoutes = require("./src/routes/pharmacy.routes");
 const labRoutes = require("./src/routes/lab.routes");
 const billingRoutes = require("./src/routes/billing.routes");
 const insuranceRoutes = require("./src/routes/insurance.routes");
+const dashboardRoutes = require("./src/routes/dashboard.routes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 // Import background queue workers to initialize them on startup
@@ -63,6 +64,7 @@ app.use("/api/pharmacy", pharmacyRoutes);
 app.use("/api/laboratory", labRoutes);
 app.use("/api/billing", billingRoutes);
 app.use("/api/insurance", insuranceRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
