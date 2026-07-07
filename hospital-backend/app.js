@@ -17,7 +17,12 @@ const prescriptionRoutes = require("./src/routes/prescription.routes");
 const pharmacyRoutes = require("./src/routes/pharmacy.routes");
 const labRoutes = require("./src/routes/lab.routes");
 const billingRoutes = require("./src/routes/billing.routes");
+const insuranceRoutes = require("./src/routes/insurance.routes");
 const errorHandler = require("./src/middleware/errorHandler");
+
+// Import background queue workers to initialize them on startup
+require("./src/shared/queue/email.worker");
+require("./src/shared/queue/cron.worker");
 
 const app = express();
 
@@ -57,6 +62,7 @@ app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/pharmacy", pharmacyRoutes);
 app.use("/api/laboratory", labRoutes);
 app.use("/api/billing", billingRoutes);
+app.use("/api/insurance", insuranceRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

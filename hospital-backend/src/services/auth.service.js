@@ -13,6 +13,7 @@ const tokenService = require("./token.service");
 const sessionService = require("./session.service");
 const emailService = require("./email.service");
 const otpService = require("./otp.service");
+const { emailQueue } = require("../shared/queue");
 
 const {
   ConflictError,
@@ -102,8 +103,14 @@ class AuthService {
       expires_at: expiresAt,
     });
 
-    // Trigger verification email asynchronously
-    emailService.sendVerificationEmail(createdUser.email, verificationToken);
+    // Dispatch email job via background queue
+    if (emailQueue) {
+      emailQueue.add("send-verification", { email: createdUser.email, token: verificationToken }).catch(() => {
+        emailService.sendVerificationEmail(createdUser.email, verificationToken);
+      });
+    } else {
+      emailService.sendVerificationEmail(createdUser.email, verificationToken);
+    }
 
     // Clean sensitive data
     delete createdUser.password;
@@ -152,8 +159,14 @@ class AuthService {
     // Update user's last login
     await userRepository.updateLastLogin(user.id);
 
-    // Trigger alert email asynchronously
-    emailService.sendSessionAlertEmail(user.email, session);
+    // Dispatch alert email job via background queue
+    if (emailQueue) {
+      emailQueue.add("send-session-alert", { email: user.email, sessionDetails: session }).catch(() => {
+        emailService.sendSessionAlertEmail(user.email, session);
+      });
+    } else {
+      emailService.sendSessionAlertEmail(user.email, session);
+    }
 
     // Remove password
     delete user.password;
@@ -216,7 +229,13 @@ class AuthService {
       expires_at: expiresAt,
     });
 
-    emailService.sendPasswordResetEmail(user.email, resetToken);
+    if (emailQueue) {
+      emailQueue.add("send-password-reset", { email: user.email, token: resetToken }).catch(() => {
+        emailService.sendPasswordResetEmail(user.email, resetToken);
+      });
+    } else {
+      emailService.sendPasswordResetEmail(user.email, resetToken);
+    }
   }
 
   /**

@@ -72,7 +72,7 @@ class BillingService {
    * Registers a payment against an invoice and updates its paid status
    */
   async recordPayment(billId, paymentData) {
-    return await db.transaction(async (trx) => {
+    await db.transaction(async (trx) => {
       const bill = await billingRepository.findById(billId);
       if (!bill) {
         throw new NotFoundError("Bill not found");
