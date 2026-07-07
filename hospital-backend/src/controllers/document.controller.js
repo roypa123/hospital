@@ -1,6 +1,7 @@
 const fs = require("fs");
 const documentService = require("../services/document.service");
 const patientRepository = require("../repositories/patient.repository");
+const storageService = require("../services/storage.service");
 const { sendSuccess } = require("../shared/response");
 const { BadRequestError, ForbiddenError } = require("../shared/errors");
 
@@ -69,14 +70,17 @@ class DocumentController {
         }
       }
 
-      if (!fs.existsSync(doc.file_path)) {
-        return res.status(404).json({ success: false, message: "Physical file not found in storage" });
-      }
-
       // Stream file directly to client
       res.setHeader("Content-Disposition", `attachment; filename="${doc.document_name}"`);
       res.setHeader("Content-Type", doc.mime_type);
-      fs.createReadStream(doc.file_path).pipe(res);
+
+      try {
+        const minioKey = doc.file_path.startsWith("minio://") ? doc.file_path.replace("minio://", "") : null;
+        const fileStream = await storageService.getFileStream(minioKey, doc.file_path);
+        fileStream.pipe(res);
+      } catch (err) {
+        return res.status(404).json({ success: false, message: "Physical file not found in storage" });
+      }
     } catch (error) {
       return next(error);
     }

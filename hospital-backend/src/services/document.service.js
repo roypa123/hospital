@@ -1,6 +1,7 @@
 const fs = require("fs");
 const documentRepository = require("../repositories/document.repository");
 const patientRepository = require("../repositories/patient.repository");
+const storageService = require("./storage.service");
 const { NotFoundError, ForbiddenError } = require("../shared/errors");
 const logger = require("../shared/logger");
 
@@ -16,11 +17,13 @@ class DocumentService {
       throw new NotFoundError("Patient profile not found");
     }
 
+    const uploadResult = await storageService.uploadFile(fileData.filename, fileData.path, fileData.mimetype);
+
     return await documentRepository.create({
       patient_id: patientId,
       document_name: fileData.originalname,
       document_type: documentType || "other",
-      file_path: fileData.path,
+      file_path: uploadResult.path,
       file_size: fileData.size,
       mime_type: fileData.mimetype,
       uploaded_by: uploaderUserId,
@@ -49,15 +52,9 @@ class DocumentService {
       throw new ForbiddenError("Forbidden: You are not authorized to delete this document");
     }
 
-    // 1. Remove file from storage disk
-    if (fs.existsSync(doc.file_path)) {
-      try {
-        fs.unlinkSync(doc.file_path);
-        logger.info(`Deleted file from disk: ${doc.file_path}`);
-      } catch (err) {
-        logger.error(`Failed to delete file from disk at ${doc.file_path}: `, err);
-      }
-    }
+    // 1. Remove file from storage
+    const minioKey = doc.file_path.startsWith("minio://") ? doc.file_path.replace("minio://", "") : null;
+    await storageService.deleteFile(minioKey, doc.file_path);
 
     // 2. Remove metadata row from database registry
     return await documentRepository.delete(id);
