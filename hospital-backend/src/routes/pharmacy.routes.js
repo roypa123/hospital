@@ -7,6 +7,13 @@ const { authenticate, requireRole } = require("../middleware/rbac");
 const router = express.Router();
 
 // Stock Levels
+router.get(
+  "/stock",
+  authenticate,
+  requireRole(["ADMIN", "PHARMACIST", "DOCTOR"]),
+  pharmacyController.getAllStock
+);
+
 router.post(
   "/stock/:medicineId",
   authenticate,

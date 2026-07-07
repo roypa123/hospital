@@ -2,6 +2,8 @@ const db = require("../config/knex");
 const billingRepository = require("../repositories/billing.repository");
 const { NotFoundError, BadRequestError } = require("../shared/errors");
 const auditService = require("./audit.service");
+const crypto = require("crypto");
+const { razorpayInstance, keySecret, isMock } = require("../config/razorpay");
 
 class BillingService {
   /**
@@ -117,6 +119,92 @@ class BillingService {
     });
 
     return await this.getBillById(billId);
+  }
+
+  async createRazorpayOrder(billId) {
+    const bill = await billingRepository.findById(billId);
+    if (!bill) {
+      throw new NotFoundError("Bill not found");
+    }
+
+    const balance = parseFloat(bill.net_amount) - parseFloat(bill.paid_amount);
+    if (balance <= 0) {
+      throw new BadRequestError("This bill has already been fully paid.");
+    }
+
+    const amountInPaise = Math.round(balance * 100);
+
+    if (isMock) {
+      return {
+        id: `order_mock_${Date.now()}`,
+        entity: "order",
+        amount: amountInPaise,
+        amount_paid: 0,
+        amount_due: amountInPaise,
+        currency: "INR",
+        receipt: billId,
+        status: "created",
+      };
+    }
+
+    try {
+      const order = await razorpayInstance.orders.create({
+        amount: amountInPaise,
+        currency: "INR",
+        receipt: billId,
+      });
+      return order;
+    } catch (err) {
+      throw new BadRequestError(`Razorpay order creation failed: ${err.message}`);
+    }
+  }
+
+  async verifyRazorpayPayment(billId, paymentData, req = null) {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      throw new BadRequestError("Missing required Razorpay payment confirmation fields.");
+    }
+
+    // Verify signature
+    if (!isMock) {
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac("sha256", keySecret)
+        .update(body)
+        .digest("hex");
+
+      if (expectedSignature !== razorpay_signature) {
+        throw new BadRequestError("Invalid payment signature verification failed");
+      }
+    } else {
+      // In Mock Mode, verify that the mock signature contains the expected signature pattern
+      const expectedMockSig = crypto
+        .createHash("sha256")
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+      
+      if (razorpay_signature !== "mock_sig_pass" && razorpay_signature !== expectedMockSig) {
+        throw new BadRequestError("Mock payment signature verification failed");
+      }
+    }
+
+    const bill = await billingRepository.findById(billId);
+    if (!bill) {
+      throw new NotFoundError("Bill not found");
+    }
+
+    const balance = parseFloat(bill.net_amount) - parseFloat(bill.paid_amount);
+
+    return await this.recordPayment(
+      billId,
+      {
+        amount: balance,
+        payment_method: "razorpay",
+        transaction_reference: razorpay_payment_id,
+      },
+      req
+    );
   }
 }
 

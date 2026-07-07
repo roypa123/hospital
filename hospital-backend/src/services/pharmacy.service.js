@@ -115,6 +115,10 @@ class PharmacyService {
     }
     return details;
   }
+
+  async getAllInventory(filters = {}) {
+    return await pharmacyRepository.getAllStock(filters);
+  }
 }
 
 module.exports = new PharmacyService();

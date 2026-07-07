@@ -49,6 +49,15 @@ class PharmacyController {
       return next(error);
     }
   }
+
+  async getAllStock(req, res, next) {
+    try {
+      const stock = await pharmacyService.getAllInventory(req.query);
+      return sendSuccess(res, "All pharmacy stock levels retrieved", stock);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 module.exports = new PharmacyController();

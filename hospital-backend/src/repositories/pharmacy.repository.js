@@ -88,6 +88,18 @@ class PharmacyRepository {
     dispense.items = items;
     return dispense;
   }
+
+  async getAllStock(filters = {}) {
+    const query = db("medicine_stock")
+      .join("medicines", "medicine_stock.medicine_id", "medicines.id")
+      .select("medicine_stock.*", "medicines.name as medicine_name");
+
+    if (filters.low_stock === "true" || filters.low_stock === true) {
+      query.where("medicine_stock.quantity", "<", 20);
+    }
+
+    return await query.orderBy("medicine_stock.expiry_date", "asc");
+  }
 }
 
 module.exports = new PharmacyRepository();

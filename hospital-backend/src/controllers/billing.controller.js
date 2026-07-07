@@ -82,6 +82,26 @@ class BillingController {
       return next(error);
     }
   }
+
+  async createRazorpayOrder(req, res, next) {
+    try {
+      const { id } = req.params;
+      const order = await billingService.createRazorpayOrder(id);
+      return sendSuccess(res, "Razorpay payment order created successfully", order, 201);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async verifyRazorpayPayment(req, res, next) {
+    try {
+      const { id } = req.params;
+      const result = await billingService.verifyRazorpayPayment(id, req.body, req);
+      return sendSuccess(res, "Razorpay payment verified and recorded successfully", result);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 module.exports = new BillingController();

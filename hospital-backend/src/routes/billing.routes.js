@@ -87,4 +87,23 @@ router.post(
   billingController.checkout
 );
 
+// Create Razorpay Order
+router.post(
+  "/:id/razorpay/order",
+  authenticate,
+  billingController.createRazorpayOrder
+);
+
+// Verify Razorpay Payment Signature
+router.post(
+  "/:id/razorpay/verify",
+  authenticate,
+  validateRequest([
+    body("razorpay_order_id").trim().notEmpty().withMessage("razorpay_order_id is required"),
+    body("razorpay_payment_id").trim().notEmpty().withMessage("razorpay_payment_id is required"),
+    body("razorpay_signature").trim().notEmpty().withMessage("razorpay_signature is required"),
+  ]),
+  billingController.verifyRazorpayPayment
+);
+
 module.exports = router;
