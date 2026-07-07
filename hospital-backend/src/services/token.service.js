@@ -8,11 +8,12 @@ class TokenService {
   /**
    * Generates a short-lived Access Token containing user metadata, roles, and permissions
    */
-  generateAccessToken(user, roles = [], permissions = []) {
+  generateAccessToken(user, roles = [], permissions = [], rolePriorities = {}) {
     const payload = {
       id: user.id,
       email: user.email,
       roles,
+      rolePriorities,
       permissions,
     };
 

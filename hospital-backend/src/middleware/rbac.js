@@ -28,23 +28,56 @@ function authenticate(req, res, next) {
  */
 function requireRole(roles) {
   const rolesArray = Array.isArray(roles) ? roles : [roles];
-  return (req, res, next) => {
+  const upperRequiredRoles = rolesArray.map((r) => r.toUpperCase());
+
+  return async (req, res, next) => {
     if (!req.user || !req.user.roles) {
       return next(new UnauthorizedError("Authentication required"));
     }
 
-    const hasRole = req.user.roles.some((r) =>
-      rolesArray.map((x) => x.toUpperCase()).includes(r)
+    // 1. Direct role match check (fast-path)
+    const hasExactRole = req.user.roles.some((r) =>
+      upperRequiredRoles.includes(r.toUpperCase())
     );
-    if (!hasRole) {
-      return next(
-        new ForbiddenError(
-          `Access denied. One of roles '${rolesArray.join(", ")}' required.`
-        )
-      );
+    if (hasExactRole) {
+      return next();
     }
 
-    return next();
+    // 2. Hierarchical priority check from database (dynamic role priorities 0-100)
+    try {
+      const db = require("../config/knex");
+
+      const dbRoles = await db("roles").whereIn("name", upperRequiredRoles);
+      if (dbRoles.length === 0) {
+        return next(
+          new ForbiddenError(
+            `Access denied. One of roles '${rolesArray.join(", ")}' required.`
+          )
+        );
+      }
+
+      // Minimum priority required to pass
+      const minRequiredPriority = Math.min(...dbRoles.map((r) => r.priority));
+
+      // Resolve user's maximum role priority dynamically from the database
+      const userDbRoles = await db("roles")
+        .join("user_roles", "roles.id", "user_roles.role_id")
+        .where("user_roles.user_id", req.user.id)
+        .select("roles.priority");
+      const userMaxPriority = Math.max(...userDbRoles.map((r) => r.priority), 0);
+
+      if (userMaxPriority >= minRequiredPriority) {
+        return next();
+      }
+
+      return next(
+        new ForbiddenError(
+          `Access denied. Required minimum role priority: ${minRequiredPriority}, User maximum role priority: ${userMaxPriority}.`
+        )
+      );
+    } catch (error) {
+      return next(error);
+    }
   };
 }
 

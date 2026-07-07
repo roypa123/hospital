@@ -155,10 +155,10 @@ class AuthService {
     const session = await sessionService.createSession(user.id, req);
 
     // 2. Fetch user roles & permissions
-    const { roles, permissions } = await userRepository.getUserRolesAndPermissions(user.id);
+    const { roles, rolePriorities, permissions } = await userRepository.getUserRolesAndPermissions(user.id);
 
     // 3. Generate tokens
-    const accessToken = tokenService.generateAccessToken(user, roles, permissions);
+    const accessToken = tokenService.generateAccessToken(user, roles, permissions, rolePriorities);
     const refreshToken = await tokenService.generateRefreshToken(user.id);
 
     // Update user's last login
@@ -198,8 +198,8 @@ class AuthService {
       throw new UnauthorizedError("User no longer exists");
     }
 
-    const { roles, permissions } = await userRepository.getUserRolesAndPermissions(user.id);
-    const accessToken = tokenService.generateAccessToken(user, roles, permissions);
+    const { roles, rolePriorities, permissions } = await userRepository.getUserRolesAndPermissions(user.id);
+    const accessToken = tokenService.generateAccessToken(user, roles, permissions, rolePriorities);
 
     return { accessToken };
   }

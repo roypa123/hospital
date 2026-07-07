@@ -65,9 +65,10 @@ class UserRepository {
     const roles = await db("roles")
       .join("user_roles", "roles.id", "user_roles.role_id")
       .where("user_roles.user_id", userId)
-      .select("roles.name");
+      .select("roles.name", "roles.priority");
 
     const roleNames = roles.map(r => r.name);
+    const rolePriorities = roles.reduce((acc, r) => ({ ...acc, [r.name]: r.priority }), {});
 
     const permissions = await db("permissions")
       .join("role_permissions", "permissions.id", "role_permissions.permission_id")
@@ -77,7 +78,7 @@ class UserRepository {
 
     const permissionNames = [...new Set(permissions.map(p => p.name))];
 
-    return { roles: roleNames, permissions: permissionNames };
+    return { roles: roleNames, rolePriorities, permissions: permissionNames };
   }
 
   async findAll(filters = {}) {

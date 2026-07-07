@@ -55,12 +55,26 @@ class BillingService {
       return bill;
     } else {
       const bill = await db.transaction(async (t) => await executeBlock(t));
-      return await billingRepository.findById(bill.id);
+      const fetchedBill = await billingRepository.findById(bill.id);
+      if (fetchedBill) {
+        const taxAmt = parseFloat(fetchedBill.tax_amount || 0);
+        fetchedBill.cgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+        fetchedBill.sgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+        fetchedBill.hospital_gstin = process.env.HOSPITAL_GSTIN || "29AAAAA1111A1Z1";
+      }
+      return fetchedBill;
     }
   }
 
   async getBills(filters = {}) {
-    return await billingRepository.findAll(filters);
+    const bills = await billingRepository.findAll(filters);
+    return bills.map((b) => {
+      const taxAmt = parseFloat(b.tax_amount || 0);
+      b.cgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+      b.sgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+      b.hospital_gstin = process.env.HOSPITAL_GSTIN || "29AAAAA1111A1Z1";
+      return b;
+    });
   }
 
   async getBillById(id) {
@@ -68,6 +82,10 @@ class BillingService {
     if (!bill) {
       throw new NotFoundError("Bill not found");
     }
+    const taxAmt = parseFloat(bill.tax_amount || 0);
+    bill.cgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+    bill.sgst_amount = parseFloat((taxAmt / 2).toFixed(2));
+    bill.hospital_gstin = process.env.HOSPITAL_GSTIN || "29AAAAA1111A1Z1";
     return bill;
   }
 

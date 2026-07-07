@@ -45,15 +45,15 @@ exports.seed = async function (knex) {
 
   // 2. Seed Roles
   const rolesData = [
-    { name: "ADMIN", description: "System Administrator with full access" },
-    { name: "DOCTOR", description: "Medical practitioner" },
-    { name: "RECEPTIONIST", description: "Front desk staff managing bookings and registration" },
-    { name: "LAB_TECHNICIAN", description: "Laboratory staff running tests and reports" },
-    { name: "PHARMACIST", description: "Pharmacy stock and dispensing manager" },
-    { name: "CASHIER", description: "Billing and payment processor" },
-    { name: "NURSE", description: "Nursing staff supporting doctors and patients" },
-    { name: "INSURANCE_OFFICER", description: "Manages claims and policies" },
-    { name: "PATIENT", description: "Registered customer seeking medical services" },
+    { name: "ADMIN", description: "System Administrator with full access", priority: 100 },
+    { name: "DOCTOR", description: "Medical practitioner", priority: 80 },
+    { name: "RECEPTIONIST", description: "Front desk staff managing bookings and registration", priority: 50 },
+    { name: "LAB_TECHNICIAN", description: "Laboratory staff running tests and reports", priority: 50 },
+    { name: "PHARMACIST", description: "Pharmacy stock and dispensing manager", priority: 50 },
+    { name: "CASHIER", description: "Billing and payment processor", priority: 50 },
+    { name: "NURSE", description: "Nursing staff supporting doctors and patients", priority: 50 },
+    { name: "INSURANCE_OFFICER", description: "Manages claims and policies", priority: 50 },
+    { name: "PATIENT", description: "Registered customer seeking medical services", priority: 10 },
   ];
 
   const roles = await knex("roles")
