@@ -1,6 +1,7 @@
 const db = require("../config/knex");
 const billingRepository = require("../repositories/billing.repository");
 const { NotFoundError, BadRequestError } = require("../shared/errors");
+const auditService = require("./audit.service");
 
 class BillingService {
   /**
@@ -71,7 +72,7 @@ class BillingService {
   /**
    * Registers a payment against an invoice and updates its paid status
    */
-  async recordPayment(billId, paymentData) {
+  async recordPayment(billId, paymentData, req = null) {
     await db.transaction(async (trx) => {
       const bill = await billingRepository.findById(billId);
       if (!bill) {
@@ -108,6 +109,11 @@ class BillingService {
         paid_amount: newPaidAmount,
         status: newStatus,
       }, trx);
+
+      // Log audit trail
+      const actorUserId = req && req.user ? req.user.id : null;
+      const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
+      auditService.log(actorUserId, "INVOICE_PAYMENT", "bills", billId, { amount: amountToPay, status: newStatus }, ipAddress);
     });
 
     return await this.getBillById(billId);

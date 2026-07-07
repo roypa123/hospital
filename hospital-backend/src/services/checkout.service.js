@@ -9,13 +9,14 @@ const pharmacyRepository = require("../repositories/pharmacy.repository");
 const labRepository = require("../repositories/lab.repository");
 const billingService = require("./billing.service");
 const { NotFoundError, BadRequestError } = require("../shared/errors");
+const auditService = require("./audit.service");
 
 class CheckoutService {
   /**
    * Concludes a consultation by saving EMR, creating prescriptions, ordering labs,
    * and generating the billing invoice in a single database transaction.
    */
-  async checkout(appointmentId, doctorUserId, checkoutData) {
+  async checkout(appointmentId, doctorUserId, checkoutData, req = null) {
     const {
       symptoms,
       diagnosis,
@@ -208,13 +209,19 @@ class CheckoutService {
         trx
       );
 
-      return {
+      const resultPayload = {
         appointment_id: appointmentId,
         emr_id: emr.id,
         prescription_id: createdPrescription ? createdPrescription.id : null,
         lab_test_ids: createdLabTests.map((lt) => lt.id),
         bill_id: createdBill.id,
       };
+
+      // Log audit trail
+      const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
+      auditService.log(doctorUserId, "CONSULTATION_CHECKOUT", "appointments", appointmentId, resultPayload, ipAddress);
+
+      return resultPayload;
     });
   }
 }

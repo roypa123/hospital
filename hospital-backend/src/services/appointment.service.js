@@ -3,6 +3,7 @@ const appointmentRepository = require("../repositories/appointment.repository");
 const doctorRepository = require("../repositories/doctor.repository");
 const patientRepository = require("../repositories/patient.repository");
 const { NotFoundError, BadRequestError, ConflictError, ForbiddenError } = require("../shared/errors");
+const auditService = require("./audit.service");
 
 class AppointmentService {
   /**
@@ -148,6 +149,12 @@ class AppointmentService {
         trx
       );
 
+      // Log audit trail
+      const patient = await patientRepository.findById(patientId);
+      if (patient) {
+        auditService.log(patient.user_id, "APPOINTMENT_BOOKED", "appointments", appointment.id, { slot_id: slotId });
+      }
+
       return appointment;
     });
   }
@@ -185,6 +192,9 @@ class AppointmentService {
 
       // 2. Release slot back to available
       await appointmentRepository.releaseSlot(appointment.slot_id, trx);
+
+      // Log audit trail
+      auditService.log(userId, "APPOINTMENT_CANCELLED", "appointments", appointmentId);
 
       return updated;
     });

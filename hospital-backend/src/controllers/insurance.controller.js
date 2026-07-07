@@ -61,7 +61,7 @@ class InsuranceController {
   async decideClaim(req, res, next) {
     try {
       const { id } = req.params;
-      const claim = await insuranceService.decideClaim(id, req.body);
+      const claim = await insuranceService.decideClaim(id, req.body, req);
       return sendSuccess(res, "Claim decision processed successfully", claim);
     } catch (error) {
       return next(error);

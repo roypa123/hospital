@@ -14,6 +14,7 @@ const sessionService = require("./session.service");
 const emailService = require("./email.service");
 const otpService = require("./otp.service");
 const { emailQueue } = require("../shared/queue");
+const auditService = require("./audit.service");
 
 const {
   ConflictError,
@@ -26,7 +27,7 @@ class AuthService {
   /**
    * Registers a new user and creates their role assignment and (if patient/doctor) profile
    */
-  async register(userData, roleName = "PATIENT") {
+  async register(userData, roleName = "PATIENT", req = null) {
     const email = userData.email.toLowerCase();
 
     // Check if user already exists
@@ -112,6 +113,10 @@ class AuthService {
       emailService.sendVerificationEmail(createdUser.email, verificationToken);
     }
 
+    // Log audit trail
+    const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
+    auditService.log(createdUser.id, "USER_REGISTER", "users", createdUser.id, { role: roleName }, ipAddress);
+
     // Clean sensitive data
     delete createdUser.password;
     return createdUser;
@@ -167,6 +172,10 @@ class AuthService {
     } else {
       emailService.sendSessionAlertEmail(user.email, session);
     }
+
+    // Log audit trail
+    const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
+    auditService.log(user.id, "USER_LOGIN", "users", user.id, { sessionId: session.id }, ipAddress);
 
     // Remove password
     delete user.password;

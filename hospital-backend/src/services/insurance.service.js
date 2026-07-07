@@ -3,6 +3,7 @@ const insuranceRepository = require("../repositories/insurance.repository");
 const patientRepository = require("../repositories/patient.repository");
 const billingRepository = require("../repositories/billing.repository");
 const { NotFoundError, BadRequestError, ConflictError } = require("../shared/errors");
+const auditService = require("./audit.service");
 
 class InsuranceService {
   async getProviders() {
@@ -87,7 +88,7 @@ class InsuranceService {
    * Processes a claims decision (approves or rejects).
    * Approving a claim credits the approved amount directly to the invoice in a transaction.
    */
-  async decideClaim(claimId, decisionData) {
+  async decideClaim(claimId, decisionData, req = null) {
     const { status, approved_amount, rejection_reason } = decisionData;
 
     if (!["approved", "rejected"].includes(status)) {
@@ -155,6 +156,11 @@ class InsuranceService {
           rejection_reason: rejection_reason.trim(),
         }, trx);
       }
+
+      // Log audit trail
+      const actorUserId = req && req.user ? req.user.id : null;
+      const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
+      auditService.log(actorUserId, "CLAIM_ADJUDICATED", "insurance_claims", claimId, { status }, ipAddress);
 
       return await insuranceRepository.findClaimById(claimId);
     });

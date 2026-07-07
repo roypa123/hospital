@@ -8,7 +8,7 @@ class BillingController {
   async checkout(req, res, next) {
     try {
       const { appointmentId } = req.params;
-      const checkoutResult = await checkoutService.checkout(appointmentId, req.user.id, req.body);
+      const checkoutResult = await checkoutService.checkout(appointmentId, req.user.id, req.body, req);
       return sendSuccess(res, "Unified consultation checkout transaction completed successfully", checkoutResult, 201);
     } catch (error) {
       return next(error);
@@ -28,7 +28,7 @@ class BillingController {
   async pay(req, res, next) {
     try {
       const { id } = req.params;
-      const updatedBill = await billingService.recordPayment(id, req.body);
+      const updatedBill = await billingService.recordPayment(id, req.body, req);
       return sendSuccess(res, "Payment processed and recorded successfully", updatedBill);
     } catch (error) {
       return next(error);

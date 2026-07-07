@@ -19,11 +19,13 @@ const labRoutes = require("./src/routes/lab.routes");
 const billingRoutes = require("./src/routes/billing.routes");
 const insuranceRoutes = require("./src/routes/insurance.routes");
 const dashboardRoutes = require("./src/routes/dashboard.routes");
+const auditRoutes = require("./src/routes/audit.routes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 // Import background queue workers to initialize them on startup
 require("./src/shared/queue/email.worker");
 require("./src/shared/queue/cron.worker");
+require("./src/shared/queue/audit.worker");
 
 const app = express();
 
@@ -65,6 +67,7 @@ app.use("/api/laboratory", labRoutes);
 app.use("/api/billing", billingRoutes);
 app.use("/api/insurance", insuranceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/audit-logs", auditRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

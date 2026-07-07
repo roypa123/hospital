@@ -9,7 +9,7 @@ class AuthController {
   async register(req, res, next) {
     try {
       const { role } = req.query; // Support passing registration role via query, fallback PATIENT
-      const user = await authService.register(req.body, role || "PATIENT");
+      const user = await authService.register(req.body, role || "PATIENT", req);
       return sendSuccess(res, "User registered successfully. Verification email has been sent.", user, 201);
     } catch (error) {
       return next(error);

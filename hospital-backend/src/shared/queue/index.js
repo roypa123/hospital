@@ -13,6 +13,7 @@ const connection = {
 
 let emailQueue = null;
 let cronQueue = null;
+let auditQueue = null;
 
 try {
   emailQueue = new Queue("email-queue", {
@@ -21,7 +22,7 @@ try {
       attempts: 3,
       backoff: {
         type: "exponential",
-        delay: 2000, // 2s, 4s, 8s backoff
+        delay: 2000,
       },
       removeOnComplete: true,
       removeOnFail: false,
@@ -29,6 +30,14 @@ try {
   });
 
   cronQueue = new Queue("cron-queue", {
+    connection,
+    defaultJobOptions: {
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  });
+
+  auditQueue = new Queue("audit-queue", {
     connection,
     defaultJobOptions: {
       removeOnComplete: true,
@@ -45,4 +54,5 @@ module.exports = {
   connection,
   emailQueue,
   cronQueue,
+  auditQueue,
 };
