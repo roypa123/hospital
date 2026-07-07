@@ -29,9 +29,9 @@ const swaggerDocument = require("./src/config/swagger");
 const errorHandler = require("./src/middleware/errorHandler");
 
 // Import background queue workers to initialize them on startup
-require("./src/shared/queue/email.worker");
-require("./src/shared/queue/cron.worker");
-require("./src/shared/queue/audit.worker");
+require("./src/jobs/email.worker");
+require("./src/jobs/cron.worker");
+require("./src/jobs/audit.worker");
 
 const app = express();
 

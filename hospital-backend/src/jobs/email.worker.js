@@ -1,7 +1,7 @@
 const { Worker } = require("bullmq");
-const emailService = require("../../services/email.service");
-const logger = require("../logger");
-const { connection } = require("./index");
+const emailService = require("../services/email.service");
+const logger = require("../shared/logger");
+const { connection } = require("../shared/queue");
 
 let emailWorker = null;
 

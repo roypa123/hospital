@@ -1,7 +1,7 @@
 const { Worker } = require("bullmq");
-const db = require("../../config/knex");
-const logger = require("../logger");
-const { connection } = require("./index");
+const db = require("../config/knex");
+const logger = require("../shared/logger");
+const { connection } = require("../shared/queue");
 
 let auditWorker = null;
 

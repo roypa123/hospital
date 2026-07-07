@@ -3,7 +3,7 @@ const http = require("http");
 const { io } = require("socket.io-client");
 const app = require("../app");
 const db = require("../src/config/knex");
-const { initSocketServer } = require("../src/config/socket");
+const { initSocketServer } = require("../src/sockets");
 const labService = require("../src/services/lab.service");
 
 const PORT = 3058;

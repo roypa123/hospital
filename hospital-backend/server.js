@@ -3,7 +3,7 @@ require("dotenv").config();
 const http = require("http");
 const app = require("./app");
 const connectDatabase = require("./src/config/database");
-const { initSocketServer } = require("./src/config/socket");
+const { initSocketServer } = require("./src/sockets");
 
 const PORT = process.env.PORT || 3000;
 

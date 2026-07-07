@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-const jwtConfig = require("./jwt");
+const jwtConfig = require("../config/jwt");
 const logger = require("../shared/logger");
 
 let ioInstance = null;

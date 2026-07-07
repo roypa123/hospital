@@ -1,4 +1,4 @@
-const { getIO } = require("../config/socket");
+const { getIO } = require("../sockets");
 const doctorRepository = require("../repositories/doctor.repository");
 const notificationRepository = require("../repositories/notification.repository");
 const logger = require("../shared/logger");
