@@ -22,6 +22,8 @@ const dashboardRoutes = require("./src/routes/dashboard.routes");
 const auditRoutes = require("./src/routes/audit.routes");
 const documentRoutes = require("./src/routes/document.routes");
 const notificationRoutes = require("./src/routes/notification.routes");
+const reportRoutes = require("./src/routes/report.routes");
+const userRoutes = require("./src/routes/user.routes");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./src/config/swagger");
 const errorHandler = require("./src/middleware/errorHandler");
@@ -77,6 +79,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit-logs", auditRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/users", userRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
