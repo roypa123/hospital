@@ -1,4 +1,4 @@
-const db = require("../db/knex");
+const db = require("../config/knex");
 
 class UserRepository {
   async create(user) {
@@ -41,7 +41,7 @@ class UserRepository {
     const [user] = await db("users")
       .where({ id })
       .update({
-        password_hash: passwordHash,
+        password: passwordHash,
         updated_at: db.fn.now(),
       })
       .returning("*");
@@ -59,6 +59,25 @@ class UserRepository {
       .returning("*");
 
     return user;
+  }
+
+  async getUserRolesAndPermissions(userId) {
+    const roles = await db("roles")
+      .join("user_roles", "roles.id", "user_roles.role_id")
+      .where("user_roles.user_id", userId)
+      .select("roles.name");
+
+    const roleNames = roles.map(r => r.name);
+
+    const permissions = await db("permissions")
+      .join("role_permissions", "permissions.id", "role_permissions.permission_id")
+      .join("user_roles", "role_permissions.role_id", "user_roles.role_id")
+      .where("user_roles.user_id", userId)
+      .select("permissions.name");
+
+    const permissionNames = [...new Set(permissions.map(p => p.name))];
+
+    return { roles: roleNames, permissions: permissionNames };
   }
 }
 

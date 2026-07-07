@@ -1,4 +1,4 @@
-const db = require("../db/knex");
+const db = require("../config/knex");
 
 class SessionRepository {
   async create(data) {
