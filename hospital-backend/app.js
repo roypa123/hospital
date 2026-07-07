@@ -7,6 +7,10 @@ const cookieParser = require("cookie-parser");
 
 const logger = require("./src/shared/logger");
 const authRoutes = require("./src/routes/auth.routes");
+const departmentRoutes = require("./src/routes/department.routes");
+const doctorRoutes = require("./src/routes/doctor.routes");
+const patientRoutes = require("./src/routes/patient.routes");
+const appointmentRoutes = require("./src/routes/appointment.routes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
@@ -37,6 +41,10 @@ app.get("/", (req, res) => {
 
 // Mount Modules Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/doctors", doctorRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
