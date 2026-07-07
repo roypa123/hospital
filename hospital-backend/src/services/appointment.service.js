@@ -4,6 +4,7 @@ const doctorRepository = require("../repositories/doctor.repository");
 const patientRepository = require("../repositories/patient.repository");
 const { NotFoundError, BadRequestError, ConflictError, ForbiddenError } = require("../shared/errors");
 const auditService = require("./audit.service");
+const notificationService = require("./notification.service");
 
 class AppointmentService {
   /**
@@ -155,6 +156,12 @@ class AppointmentService {
         auditService.log(patient.user_id, "APPOINTMENT_BOOKED", "appointments", appointment.id, { slot_id: slotId });
       }
 
+      // Trigger real-time alert
+      notificationService.sendToDoctor(doctorId, "APPOINTMENT_BOOKED", {
+        appointment_id: appointment.id,
+        message: "A new appointment has been scheduled.",
+      });
+
       return appointment;
     });
   }
@@ -247,7 +254,17 @@ class AppointmentService {
       updatePayload.notes = notes;
     }
 
-    return await appointmentRepository.updateAppointment(appointmentId, updatePayload);
+    const updated = await appointmentRepository.updateAppointment(appointmentId, updatePayload);
+
+    // Trigger real-time alert on check-in
+    if (status === "checked_in") {
+      notificationService.sendToDoctor(appointment.doctor_id, "APPOINTMENT_CHECKED_IN", {
+        appointment_id: appointmentId,
+        message: "Your patient has checked in and is waiting.",
+      });
+    }
+
+    return updated;
   }
 }
 

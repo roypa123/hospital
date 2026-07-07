@@ -21,6 +21,8 @@ const insuranceRoutes = require("./src/routes/insurance.routes");
 const dashboardRoutes = require("./src/routes/dashboard.routes");
 const auditRoutes = require("./src/routes/audit.routes");
 const documentRoutes = require("./src/routes/document.routes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./src/config/swagger");
 const errorHandler = require("./src/middleware/errorHandler");
 
 // Import background queue workers to initialize them on startup
@@ -31,7 +33,7 @@ require("./src/shared/queue/audit.worker");
 const app = express();
 
 app.use(cors());
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(cookieParser());
 
@@ -53,6 +55,9 @@ app.get("/", (req, res) => {
     message: "Hospital Management System API running.",
   });
 });
+
+// Swagger API Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Mount Modules Routes
 app.use("/api/auth", authRoutes);

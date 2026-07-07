@@ -10,6 +10,7 @@ const labRepository = require("../repositories/lab.repository");
 const billingService = require("./billing.service");
 const { NotFoundError, BadRequestError } = require("../shared/errors");
 const auditService = require("./audit.service");
+const notificationService = require("./notification.service");
 
 class CheckoutService {
   /**
@@ -220,6 +221,14 @@ class CheckoutService {
       // Log audit trail
       const ipAddress = req ? (req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress) : null;
       auditService.log(doctorUserId, "CONSULTATION_CHECKOUT", "appointments", appointmentId, resultPayload, ipAddress);
+
+      // Trigger real-time alert to patient
+      if (createdPrescription) {
+        notificationService.sendToUser(appointment.patient_user_id, "PRESCRIPTION_READY", {
+          prescription_id: createdPrescription.id,
+          message: `Dr. ${doctor.first_name} ${doctor.last_name} has written a prescription for you.`,
+        });
+      }
 
       return resultPayload;
     });
