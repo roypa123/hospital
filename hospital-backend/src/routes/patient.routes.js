@@ -9,6 +9,20 @@ const router = express.Router();
 router.get("/", authenticate, patientController.list);
 router.get("/:id", authenticate, patientController.get);
 
+router.post(
+  "/",
+  authenticate,
+  validateRequest([
+    body("first_name").trim().notEmpty().withMessage("First name is required"),
+    body("last_name").trim().notEmpty().withMessage("Last name is required"),
+    body("email").trim().isEmail().withMessage("Provide a valid email address"),
+    body("date_of_birth").isISO8601().withMessage("Provide a valid date (YYYY-MM-DD)"),
+    body("gender").isIn(["Male", "Female", "Other", "Prefer not to say"]),
+    body("blood_group").isIn(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
+  ]),
+  patientController.create
+);
+
 router.put(
   "/:id",
   authenticate,

@@ -72,6 +72,23 @@ class PatientController {
       return next(error);
     }
   }
+
+  async create(req, res, next) {
+    try {
+      const isStaffOrAdmin = req.user.roles.some((r) =>
+        ["ADMIN", "RECEPTIONIST"].includes(r)
+      );
+
+      if (!isStaffOrAdmin) {
+        throw new ForbiddenError("Forbidden: Only staff members can register new patients");
+      }
+
+      const patient = await patientService.createPatient(req.body);
+      return sendSuccess(res, "Patient profile registered successfully", patient, 201);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 module.exports = new PatientController();
