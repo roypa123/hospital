@@ -53,7 +53,7 @@ export const Patients: React.FC = () => {
     treatment_plan: '',
     blood_pressure: '120/80',
     heart_rate: '72',
-    temperature: '98.6',
+    temperature: '37.0',
     notes: '',
   });
 
@@ -64,8 +64,7 @@ export const Patients: React.FC = () => {
     try {
       const recordsRes = await api.medicalRecords.list({ patient_id: patient.id });
       setMedicalRecords(recordsRes.data || []);
-      const docRes = await api.documents.list();
-      // Filter documents belonging to patient if metadata exists
+      const docRes = await api.documents.list({ patient_id: patient.id });
       setDocuments(docRes.data || []);
     } catch (e) {
       console.error('Failed to load patient clinical history', e);
@@ -122,14 +121,14 @@ export const Patients: React.FC = () => {
       await api.medicalRecords.create({
         patient_id: selectedPatient.id,
         symptoms: newRecord.symptoms,
-        diagnoses: newRecord.diagnoses,
+        diagnosis: newRecord.diagnoses,
         treatment_plan: newRecord.treatment_plan,
         vital_signs: {
           blood_pressure: newRecord.blood_pressure,
-          heart_rate: newRecord.heart_rate,
-          temperature: newRecord.temperature,
+          heart_rate: newRecord.heart_rate ? parseInt(newRecord.heart_rate, 10) : undefined,
+          temperature: newRecord.temperature ? parseFloat(newRecord.temperature) : undefined,
         },
-        notes: newRecord.notes,
+        clinical_notes: newRecord.notes,
       });
       toast.success('EMR clinical record created successfully!');
       setShowAddRecord(false);
@@ -139,7 +138,7 @@ export const Patients: React.FC = () => {
         treatment_plan: '',
         blood_pressure: '120/80',
         heart_rate: '72',
-        temperature: '98.6',
+        temperature: '37.0',
         notes: '',
       });
       handleSelectPatient(selectedPatient);
@@ -537,9 +536,9 @@ export const Patients: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="font-bold text-slate-300">Temperature (°F)</label>
+                    <label className="font-bold text-slate-300">Temperature (°C)</label>
                     <Input
-                      placeholder="98.6"
+                      placeholder="37.0"
                       value={newRecord.temperature}
                       onChange={(e) => setNewRecord(prev => ({ ...prev, temperature: e.target.value }))}
                       className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-[10px]"

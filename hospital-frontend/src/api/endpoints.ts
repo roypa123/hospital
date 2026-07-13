@@ -122,7 +122,7 @@ export const api = {
         'Content-Type': 'multipart/form-data',
       },
     }).then(r => r.data),
-    list: () => apiClient.get<ApiResponse>('/documents').then(r => r.data),
+    list: (params?: any) => apiClient.get<ApiResponse>('/documents', { params }).then(r => r.data),
     download: (id: string) => apiClient.get(`/documents/${id}/download`, { responseType: 'blob' }).then(r => r.data),
     delete: (id: string) => apiClient.delete<ApiResponse>(`/documents/${id}`).then(r => r.data),
   },
