@@ -56,7 +56,7 @@ export const api = {
   appointments: {
     list: (params?: any) => apiClient.get<ApiResponse>('/appointments', { params }).then(r => r.data),
     get: (id: string) => apiClient.get<ApiResponse>(`/appointments/${id}`).then(r => r.data),
-    create: (data: { doctor_id: string; slot_id: string; reason?: string }) => apiClient.post<ApiResponse>('/appointments', data).then(r => r.data),
+    create: (data: { doctor_id: string; slot_id: string; reason?: string; patient_id?: string }) => apiClient.post<ApiResponse>('/appointments', data).then(r => r.data),
     cancel: (id: string) => apiClient.post<ApiResponse>(`/appointments/${id}/cancel`).then(r => r.data),
     reschedule: (id: string, data: any) => apiClient.post<ApiResponse>(`/appointments/${id}/reschedule`, data).then(r => r.data),
     updateStatus: (id: string, data: { status: string; notes?: string }) => apiClient.patch<ApiResponse>(`/appointments/${id}/status`, data).then(r => r.data),

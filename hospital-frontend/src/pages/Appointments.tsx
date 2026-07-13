@@ -27,12 +27,14 @@ export const Appointments: React.FC = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [slots, setSlots] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
   
   // Selection / Form
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState('');
   const [reason, setReason] = useState('');
   
   const [loadingAppts, setLoadingAppts] = useState(false);
@@ -63,6 +65,11 @@ export const Appointments: React.FC = () => {
       setDepartments(deptsRes.data || []);
       const docsRes = await api.doctors.list();
       setDoctors(docsRes.data || []);
+      
+      if (isStaff) {
+        const patientsRes = await api.patients.list();
+        setPatients(patientsRes.data || []);
+      }
     } catch (e) {
       console.error('Failed to load metadata', e);
     }
@@ -117,14 +124,20 @@ export const Appointments: React.FC = () => {
       toast.error('Doctor and slot selection required');
       return;
     }
+    if (isStaff && !selectedPatientId) {
+      toast.error('Please select a patient to book the appointment for');
+      return;
+    }
     try {
       await api.appointments.create({
         doctor_id: selectedDoctor,
         slot_id: selectedSlot,
-        reason
+        reason,
+        ...(isStaff ? { patient_id: selectedPatientId } : {})
       });
       toast.success('Appointment booked successfully!');
       setSelectedSlot('');
+      setSelectedPatientId('');
       setReason('');
       fetchAppointments();
       handleFetchSlots();
@@ -281,6 +294,25 @@ export const Appointments: React.FC = () => {
 
                 {selectedSlot && (
                   <form onSubmit={handleBookAppointment} className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                    {isStaff && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Select Patient</label>
+                        <select
+                          value={selectedPatientId}
+                          onChange={(e) => setSelectedPatientId(e.target.value)}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 animate-in fade-in slide-in-from-top-1"
+                          required
+                        >
+                          <option value="">-- Choose Patient --</option>
+                          {patients.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.first_name} {p.last_name} ({p.email || 'No email'})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Reason for Visit</label>
                       <Input
