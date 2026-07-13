@@ -33,10 +33,10 @@ export const AuditLogs: React.FC = () => {
   }, []);
 
   const filteredLogs = logs.filter(log => 
-    log.event_type?.toLowerCase().includes(search.toLowerCase()) ||
-    log.table_name?.toLowerCase().includes(search.toLowerCase()) ||
-    log.first_name?.toLowerCase().includes(search.toLowerCase()) ||
-    log.last_name?.toLowerCase().includes(search.toLowerCase())
+    (log.action || '').toLowerCase().includes(search.toLowerCase()) ||
+    (log.resource_type || '').toLowerCase().includes(search.toLowerCase()) ||
+    (log.first_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (log.last_name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -104,16 +104,16 @@ export const AuditLogs: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
-                          ${log.event_type.includes('LOGIN') ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/15' : 
-                            log.event_type.includes('DELETE') ? 'bg-rose-500/10 text-rose-500 border border-rose-500/15' : 
+                          ${(log.action || '').includes('LOGIN') ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/15' : 
+                            (log.action || '').includes('DELETE') ? 'bg-rose-500/10 text-rose-500 border border-rose-500/15' : 
                             'bg-indigo-500/10 text-indigo-500 border border-indigo-500/15'}`}>
-                          {log.event_type}
+                          {log.action}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         <span className="flex items-center gap-1">
                           <Database className="w-3 h-3 text-slate-400" />
-                          {log.table_name}
+                          {log.resource_type}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-slate-450 dark:text-slate-500 truncate max-w-[250px] cursor-help" title={JSON.stringify(log.payload)}>
