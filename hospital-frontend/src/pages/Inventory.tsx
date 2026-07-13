@@ -17,6 +17,11 @@ export const Inventory: React.FC = () => {
   const [medicines, setMedicines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
   
   // Modals / Actions
   const [adjustingMedId, setAdjustingMedId] = useState<string | null>(null);
@@ -68,6 +73,10 @@ export const Inventory: React.FC = () => {
     med.name.toLowerCase().includes(search.toLowerCase()) || 
     med.manufacturer?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.ceil(filteredMeds.length / ITEMS_PER_PAGE);
+  const paginatedMeds = filteredMeds.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const totalMeds = medicines.length;
   const lowStockCount = medicines.filter(m => m.stock_quantity < 20).length;
@@ -140,7 +149,8 @@ export const Inventory: React.FC = () => {
               No medicines found matching criteria.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-150 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
@@ -152,7 +162,7 @@ export const Inventory: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {filteredMeds.map((med) => (
+                  {paginatedMeds.map((med) => (
                     <tr key={med.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{med.name}</td>
                       <td className="py-3.5 px-4 text-slate-655 dark:text-slate-350">{med.manufacturer || 'General Pharma'}</td>
@@ -176,6 +186,47 @@ export const Inventory: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-150 dark:border-slate-800 text-xs">
+                <span className="text-slate-500 dark:text-slate-450">
+                  Showing <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(filteredMeds.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span> to{' '}
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(filteredMeds.length, currentPage * ITEMS_PER_PAGE)}</span> of{' '}
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{filteredMeds.length}</span> medicines
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-350 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(idx + 1)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold cursor-pointer transition-all
+                        ${currentPage === idx + 1
+                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850'
+                        }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-350 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
           )}
         </CardContent>
       </Card>
