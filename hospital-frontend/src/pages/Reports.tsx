@@ -24,21 +24,54 @@ import {
 import { toast } from 'sonner';
 
 export const Reports: React.FC = () => {
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  const [apptData, setApptData] = useState<any[]>([]);
+  const [financialSummary, setFinancialSummary] = useState<any>({ total_net: 0, total_paid: 0 });
+  const [revenueTimeline, setRevenueTimeline] = useState<any[]>([]);
+  const [clinicalData, setClinicalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const [revRes, apptRes] = await Promise.all([
-        api.reports.getRevenue(),
-        api.reports.getAppointments()
+      const [financialRes, clinicalRes] = await Promise.all([
+        api.reports.getFinancial(),
+        api.reports.getClinical()
       ]);
       
-      // Transform data for recharts if needed
-      setRevenueData(revRes.data || []);
-      setApptData(apptRes.data || []);
+      const finData = financialRes.data || { summary: { total_net: 0, total_paid: 0 }, records: [] };
+      const clinData = clinicalRes.data || [];
+
+      setFinancialSummary(finData.summary);
+
+      // Group billing records by month for the timeline chart
+      const monthlyGroups: { [key: string]: { month: string; total_billed: number; total_paid: number } } = {};
+      
+      (finData.records || []).forEach((bill: any) => {
+        const date = new Date(bill.created_at);
+        const monthName = date.toLocaleDateString('default', { month: 'short', year: '2-digit' });
+        if (!monthlyGroups[monthName]) {
+          monthlyGroups[monthName] = { month: monthName, total_billed: 0, total_paid: 0 };
+        }
+        monthlyGroups[monthName].total_billed += parseFloat(bill.net_amount || 0);
+        monthlyGroups[monthName].total_paid += parseFloat(bill.paid_amount || 0);
+      });
+
+      // Sort chronologically (earlier months first)
+      const sortedTimeline = Object.values(monthlyGroups).sort((a: any, b: any) => {
+        const dateA = new Date(a.month);
+        const dateB = new Date(b.month);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      setRevenueTimeline(sortedTimeline);
+
+      // Map clinical data
+      const mappedClinical = clinData.map((item: any) => ({
+        doctor_name: `Dr. ${item.doctor_first_name} ${item.doctor_last_name}`,
+        total: parseInt(item.total_appointments, 10) || 0,
+        completed: parseInt(item.completed_appointments, 10) || 0
+      }));
+
+      setClinicalData(mappedClinical);
     } catch (e) {
       toast.error('Failed to load intelligence reports');
     } finally {
@@ -50,9 +83,9 @@ export const Reports: React.FC = () => {
     fetchReports();
   }, []);
 
-  const totalBilled = revenueData.reduce((acc, curr) => acc + parseFloat(curr.total_billed || 0), 0);
-  const totalCollected = revenueData.reduce((acc, curr) => acc + parseFloat(curr.total_paid || 0), 0);
-  const totalVolume = apptData.reduce((acc, curr) => acc + parseInt(curr.count || 0), 0);
+  const totalBilled = financialSummary.total_net || 0;
+  const totalCollected = financialSummary.total_paid || 0;
+  const totalVolume = clinicalData.reduce((acc, curr) => acc + curr.total, 0);
 
   return (
     <div className="space-y-6">
@@ -60,7 +93,7 @@ export const Reports: React.FC = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-emerald-500" />
-          <h2 className="text-sm font-bold text-slate-450 uppercase tracking-wider">Reports & Analytics Console</h2>
+          <h2 className="text-sm font-bold text-slate-455 uppercase tracking-wider">Reports & Analytics Console</h2>
         </div>
         <button 
           onClick={fetchReports} 
@@ -116,20 +149,20 @@ export const Reports: React.FC = () => {
         <Card className="backdrop-blur-md bg-white/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
           <CardHeader>
             <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Financial Revenue Timeline</CardTitle>
-            <CardDescription className="text-xs text-slate-550 dark:text-slate-450">Billed amount vs. payments collected historically</CardDescription>
+            <CardDescription className="text-xs text-slate-550 dark:text-slate-455">Billed amount vs. payments collected historically</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            {loading && revenueData.length === 0 ? (
+            {loading && revenueTimeline.length === 0 ? (
               <div className="flex justify-center items-center h-full">
                 <Activity className="w-6 h-6 animate-spin text-emerald-500" />
               </div>
-            ) : revenueData.length === 0 ? (
-              <div className="text-center py-12 text-xs text-slate-450 h-full flex items-center justify-center">
+            ) : revenueTimeline.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-455 h-full flex items-center justify-center">
                 No financial logs recorded.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueData}>
+                <AreaChart data={revenueTimeline}>
                   <defs>
                     <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
@@ -153,25 +186,27 @@ export const Reports: React.FC = () => {
         <Card className="backdrop-blur-md bg-white/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
           <CardHeader>
             <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Bookings Load Factor</CardTitle>
-            <CardDescription className="text-xs text-slate-550 dark:text-slate-450">Active count distribution over status tags</CardDescription>
+            <CardDescription className="text-xs text-slate-550 dark:text-slate-455">Doctor workload distribution comparison</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            {loading && apptData.length === 0 ? (
+            {loading && clinicalData.length === 0 ? (
               <div className="flex justify-center items-center h-full">
                 <Activity className="w-6 h-6 animate-spin text-emerald-500" />
               </div>
-            ) : apptData.length === 0 ? (
-              <div className="text-center py-12 text-xs text-slate-450 h-full flex items-center justify-center">
+            ) : clinicalData.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-455 h-full flex items-center justify-center">
                 No appointment load logs.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={apptData}>
+                <BarChart data={clinicalData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#3341551A" />
-                  <XAxis dataKey="status" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <XAxis dataKey="doctor_name" stroke="#64748b" fontSize={10} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px', color: '#fff' }} />
-                  <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} name="Booking Count" />
+                  <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '10px' }} />
+                  <Bar dataKey="total" fill="#6366f1" radius={[8, 8, 0, 0]} name="Total Booked" />
+                  <Bar dataKey="completed" fill="#10b981" radius={[8, 8, 0, 0]} name="Completed Consultations" />
                 </BarChart>
               </ResponsiveContainer>
             )}

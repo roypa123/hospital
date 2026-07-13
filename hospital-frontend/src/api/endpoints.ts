@@ -134,8 +134,8 @@ export const api = {
     read: (id: string) => apiClient.put<ApiResponse>(`/notifications/${id}/read`).then(r => r.data),
   },
   reports: {
-    getRevenue: () => apiClient.get<ApiResponse>('/reports/revenue').then(r => r.data),
-    getAppointments: () => apiClient.get<ApiResponse>('/reports/appointments').then(r => r.data),
-    getOccupancy: () => apiClient.get<ApiResponse>('/reports/occupancy').then(r => r.data),
+    getFinancial: () => apiClient.get<ApiResponse>('/reports/financial').then(r => r.data),
+    getClinical: () => apiClient.get<ApiResponse>('/reports/clinical').then(r => r.data),
+    getInventory: () => apiClient.get<ApiResponse>('/reports/inventory').then(r => r.data),
   },
 };
