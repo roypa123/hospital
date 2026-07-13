@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { 
   FileText, 
   Plus, 
-  Trash2, 
   RefreshCw, 
   Activity, 
   Pill, 
@@ -35,10 +34,13 @@ export const Prescriptions: React.FC = () => {
   // Form fields
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedMedicine, setSelectedMedicine] = useState('');
-  const [dosage, setDosage] = useState('');
-  const [frequency, setFrequency] = useState('');
-  const [duration, setDuration] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [dosageMorning, setDosageMorning] = useState(false);
+  const [dosageAfternoon, setDosageAfternoon] = useState(false);
+  const [dosageNight, setDosageNight] = useState(false);
+  const [instruction, setInstruction] = useState('AFTER_FOOD');
+  const [durationDays, setDurationDays] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [itemsList, setItemsList] = useState<any[]>([]);
 
   const fetchPrescriptions = async () => {
@@ -70,8 +72,8 @@ export const Prescriptions: React.FC = () => {
   }, []);
 
   const handleAddItem = () => {
-    if (!selectedMedicine || !dosage || !frequency || !duration) {
-      toast.error('Medication, dosage, frequency, and duration are required');
+    if (!selectedMedicine || !durationDays || !quantity) {
+      toast.error('Medicine, duration days, and quantity are required');
       return;
     }
     const medObj = medicines.find(m => m.id === selectedMedicine);
@@ -80,17 +82,23 @@ export const Prescriptions: React.FC = () => {
     setItemsList(prev => [...prev, {
       medicine_id: selectedMedicine,
       name: medObj.name,
-      dosage,
-      frequency,
-      duration,
-      instructions
+      dosage_morning: dosageMorning,
+      dosage_afternoon: dosageAfternoon,
+      dosage_night: dosageNight,
+      instruction,
+      duration_days: parseInt(durationDays, 10),
+      quantity: parseInt(quantity, 10),
+      additional_instructions: additionalInstructions
     }]);
 
     setSelectedMedicine('');
-    setDosage('');
-    setFrequency('');
-    setDuration('');
-    setInstructions('');
+    setDosageMorning(false);
+    setDosageAfternoon(false);
+    setDosageNight(false);
+    setInstruction('AFTER_FOOD');
+    setDurationDays('');
+    setQuantity('');
+    setAdditionalInstructions('');
   };
 
   const handleRemoveItem = (index: number) => {
@@ -197,14 +205,21 @@ export const Prescriptions: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Items */}
+                 {/* Items */}
                 <div className="border-t border-slate-100 dark:border-slate-800/80 pt-2 space-y-1.5">
                   <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Medications</p>
                   <div className="space-y-1 text-xs">
                     {pres.items?.map((item: any, idx: number) => (
                       <div key={idx} className="flex justify-between items-center text-slate-655 dark:text-slate-400 bg-slate-50 dark:bg-slate-850/45 px-2.5 py-1.5 rounded-xl border border-slate-150/40 dark:border-slate-850">
                         <span className="font-bold flex items-center gap-1"><Pill className="w-3 h-3 text-slate-400" /> {item.medicine_name || item.name}</span>
-                        <span className="text-[10px] text-slate-450">{item.dosage} • {item.frequency}</span>
+                        <span className="text-[10px] text-slate-450">
+                          {[
+                            item.dosage_morning && 'Morning',
+                            item.dosage_afternoon && 'Afternoon',
+                            item.dosage_night && 'Night'
+                          ].filter(Boolean).join('-') || 'As needed'}{' '}
+                          • {item.instruction?.replace('_', ' ')} • {item.duration_days} days
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -272,11 +287,60 @@ export const Prescriptions: React.FC = () => {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-400">Dosage</label>
+                      <label className="font-bold text-slate-400">Dosage Schedule</label>
+                      <div className="flex gap-2.5 pt-2 text-[10px]">
+                        <label className="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={dosageMorning} 
+                            onChange={(e) => setDosageMorning(e.target.checked)} 
+                            className="rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                          />
+                          <span>Morning</span>
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={dosageAfternoon} 
+                            onChange={(e) => setDosageAfternoon(e.target.checked)} 
+                            className="rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                          />
+                          <span>Afternoon</span>
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={dosageNight} 
+                            onChange={(e) => setDosageNight(e.target.checked)} 
+                            className="rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                          />
+                          <span>Night</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">Instruction</label>
+                      <select
+                        value={instruction}
+                        onChange={(e) => setInstruction(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-xl focus:outline-none"
+                      >
+                        <option value="AFTER_FOOD">After Food</option>
+                        <option value="BEFORE_FOOD">Before Food</option>
+                        <option value="WITH_FOOD">With Food</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400">Duration (Days)</label>
                       <Input
-                        placeholder="500mg, 1 tablet..."
-                        value={dosage}
-                        onChange={(e) => setDosage(e.target.value)}
+                        type="number"
+                        min="1"
+                        placeholder="5"
+                        value={durationDays}
+                        onChange={(e) => setDurationDays(e.target.value)}
                         className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-xs"
                       />
                     </div>
@@ -284,20 +348,22 @@ export const Prescriptions: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-400">Frequency</label>
+                      <label className="font-bold text-slate-400">Total Quantity</label>
                       <Input
-                        placeholder="Twice daily, every 8 hours..."
-                        value={frequency}
-                        onChange={(e) => setFrequency(e.target.value)}
+                        type="number"
+                        min="1"
+                        placeholder="10"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
                         className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-400">Duration</label>
+                      <label className="font-bold text-slate-400">Additional Instructions</label>
                       <Input
-                        placeholder="5 days, 1 week..."
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
+                        placeholder="Take with warm water..."
+                        value={additionalInstructions}
+                        onChange={(e) => setAdditionalInstructions(e.target.value)}
                         className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-xs"
                       />
                     </div>
@@ -308,7 +374,7 @@ export const Prescriptions: React.FC = () => {
                     onClick={handleAddItem}
                     className="w-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs py-1.5 rounded-xl cursor-pointer"
                   >
-                    Add Row to Bill
+                    Add Row to Prescription
                   </Button>
                 </div>
 
@@ -318,18 +384,27 @@ export const Prescriptions: React.FC = () => {
                     <p className="font-bold text-[10px] text-slate-450 uppercase tracking-wider">Medications Added</p>
                     <div className="space-y-1.5">
                       {itemsList.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-slate-950/60 border border-slate-800 px-3 py-2 rounded-xl text-xs">
-                          <div>
-                            <span className="font-bold text-white">{item.name}</span>
-                            <span className="text-[10px] text-slate-450 block">{item.dosage} • {item.frequency} for {item.duration}</span>
+                        <div key={idx} className="flex justify-between items-center text-slate-300 bg-slate-950/65 px-3 py-2 rounded-xl border border-slate-800">
+                          <div className="space-y-0.5">
+                            <p className="font-bold flex items-center gap-1"><Pill className="w-3.5 h-3.5 text-emerald-500" /> {item.name}</p>
+                            <p className="text-[10px] text-slate-450">
+                              Schedule: {[
+                                item.dosage_morning && 'Morning',
+                                item.dosage_afternoon && 'Afternoon',
+                                item.dosage_night && 'Night'
+                              ].filter(Boolean).join('-') || 'As needed'} |
+                              Instruction: {item.instruction.replace('_', ' ')} |
+                              Duration: {item.duration_days} days |
+                              Qty: {item.quantity}
+                            </p>
                           </div>
-                          <button 
+                          <Button 
                             type="button" 
                             onClick={() => handleRemoveItem(idx)}
-                            className="p-1 text-slate-400 hover:text-rose-500 rounded-lg cursor-pointer"
+                            className="bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 p-1 px-2 text-[10px] rounded-lg cursor-pointer"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            Remove
+                          </Button>
                         </div>
                       ))}
                     </div>

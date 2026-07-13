@@ -90,8 +90,8 @@ export const api = {
   laboratory: {
     list: () => apiClient.get<ApiResponse>('/laboratory').then(r => r.data),
     get: (id: string) => apiClient.get<ApiResponse>(`/laboratory/${id}`).then(r => r.data),
-    requestTest: (data: any) => apiClient.post<ApiResponse>('/laboratory/requests', data).then(r => r.data),
-    uploadResult: (data: any) => apiClient.post<ApiResponse>('/laboratory/results', data).then(r => r.data),
+    requestTest: (data: any) => apiClient.post<ApiResponse>('/laboratory', data).then(r => r.data),
+    uploadResult: (id: string, data: any) => apiClient.post<ApiResponse>(`/laboratory/${id}/results`, data).then(r => r.data),
     approveTest: (id: string) => apiClient.post<ApiResponse>(`/laboratory/${id}/approve`).then(r => r.data),
   },
   billing: {

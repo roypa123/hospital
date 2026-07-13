@@ -32,6 +32,7 @@ export const Laboratory: React.FC = () => {
   // Add test form fields
   const [selectedPatient, setSelectedPatient] = useState('');
   const [testName, setTestName] = useState('');
+  const [category, setCategory] = useState('Blood Test');
   const [description, setDescription] = useState('');
   
   // Upload results fields
@@ -75,12 +76,13 @@ export const Laboratory: React.FC = () => {
       await api.laboratory.requestTest({
         patient_id: selectedPatient,
         test_name: testName,
-        description
+        category
       });
       toast.success('Lab test requested successfully');
       setShowAddModal(false);
       setSelectedPatient('');
       setTestName('');
+      setCategory('Blood Test');
       setDescription('');
       fetchLabTests();
     } catch (err: any) {
@@ -96,9 +98,9 @@ export const Laboratory: React.FC = () => {
     }
 
     try {
-      await api.laboratory.uploadResult({
-        lab_test_id: uploadedTestId,
-        result_details: resultText
+      await api.laboratory.uploadResult(uploadedTestId, {
+        results_summary: resultText,
+        findings: resultText
       });
       toast.success('Test results uploaded successfully');
       setUploadedTestId(null);
@@ -176,10 +178,10 @@ export const Laboratory: React.FC = () => {
                 </div>
 
                 {/* Show details / result if present */}
-                {test.result_details && (
+                {test.results_summary && (
                   <div className="p-3 bg-slate-50 dark:bg-slate-850/45 border border-slate-150 dark:border-slate-850 rounded-xl space-y-1">
                     <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Report Results</p>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold italic">"{test.result_details}"</p>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold italic">"{test.results_summary}"</p>
                   </div>
                 )}
               </CardContent>
@@ -248,6 +250,24 @@ export const Laboratory: React.FC = () => {
                     className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-xs"
                     required
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-350">Test Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    required
+                  >
+                    <option value="Blood Test">Blood Test</option>
+                    <option value="Urine Test">Urine Test</option>
+                    <option value="X-Ray">X-Ray</option>
+                    <option value="MRI">MRI</option>
+                    <option value="CT Scan">CT Scan</option>
+                    <option value="ECG">ECG</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1">
