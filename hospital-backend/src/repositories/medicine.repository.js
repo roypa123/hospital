@@ -7,7 +7,15 @@ class MedicineRepository {
   }
 
   async findById(id) {
-    return await db("medicines").where({ id }).first();
+    return await db("medicines")
+      .leftJoin("medicine_stock", "medicines.id", "medicine_stock.medicine_id")
+      .select(
+        "medicines.*",
+        db.raw("COALESCE(SUM(medicine_stock.quantity), 0)::integer as stock_quantity")
+      )
+      .where("medicines.id", id)
+      .groupBy("medicines.id")
+      .first();
   }
 
   async findByName(name) {
@@ -15,25 +23,31 @@ class MedicineRepository {
   }
 
   async findAll(filters = {}) {
-    const query = db("medicines");
+    const query = db("medicines")
+      .leftJoin("medicine_stock", "medicines.id", "medicine_stock.medicine_id")
+      .select(
+        "medicines.*",
+        db.raw("COALESCE(SUM(medicine_stock.quantity), 0)::integer as stock_quantity")
+      )
+      .groupBy("medicines.id");
 
     if (filters.category) {
-      query.where("category", filters.category);
+      query.where("medicines.category", filters.category);
     }
     if (filters.search) {
       query.where((builder) => {
         builder
-          .whereILike("name", `%${filters.search}%`)
-          .orWhereILike("generic_name", `%${filters.search}%`);
+          .whereILike("medicines.name", `%${filters.search}%`)
+          .orWhereILike("medicines.generic_name", `%${filters.search}%`);
       });
     }
     if (filters.is_active !== undefined) {
-      query.where("is_active", filters.is_active);
+      query.where("medicines.is_active", filters.is_active);
     } else {
-      query.where("is_active", true);
+      query.where("medicines.is_active", true);
     }
 
-    return await query.orderBy("name", "asc");
+    return await query.orderBy("medicines.name", "asc");
   }
 
   async update(id, data) {

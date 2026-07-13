@@ -58,6 +58,16 @@ class PharmacyController {
       return next(error);
     }
   }
+
+  async adjustStock(req, res, next) {
+    try {
+      const { medicine_id, quantity_change } = req.body;
+      const result = await pharmacyService.adjustStock(medicine_id, quantity_change);
+      return sendSuccess(res, "Stock adjusted successfully", result);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 module.exports = new PharmacyController();

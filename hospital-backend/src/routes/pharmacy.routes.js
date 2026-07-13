@@ -29,6 +29,17 @@ router.post(
   pharmacyController.addStock
 );
 
+router.post(
+  "/adjust-stock",
+  authenticate,
+  requireRole(["ADMIN", "PHARMACIST"]),
+  validateRequest([
+    body("medicine_id").isUUID().withMessage("Provide a valid medicineId"),
+    body("quantity_change").isInt().withMessage("Quantity change must be an integer"),
+  ]),
+  pharmacyController.adjustStock
+);
+
 router.get(
   "/stock/:medicineId",
   authenticate,

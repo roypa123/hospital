@@ -119,6 +119,70 @@ class PharmacyService {
   async getAllInventory(filters = {}) {
     return await pharmacyRepository.getAllStock(filters);
   }
+
+  async adjustStock(medicineId, quantityChange) {
+    return await db.transaction(async (trx) => {
+      // Find latest/active stock batch for this medicine
+      const batch = await trx("medicine_stock")
+        .where({ medicine_id: medicineId })
+        .orderBy("created_at", "desc")
+        .first();
+
+      if (quantityChange > 0) {
+        // Adding stock
+        if (batch) {
+          const newQty = batch.quantity + quantityChange;
+          await trx("medicine_stock")
+            .where({ id: batch.id })
+            .update({ quantity: newQty, updated_at: db.fn.now() });
+        } else {
+          // Create default batch
+          await trx("medicine_stock").insert({
+            medicine_id: medicineId,
+            batch_number: "ADJUST-DEFAULT",
+            expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            quantity: quantityChange,
+            cost_price: 0,
+            selling_price: 0
+          });
+        }
+      } else {
+        // Subtracting stock
+        if (!batch) {
+          throw new BadRequestError("Cannot decrease stock: No stock batch exists for this medicine");
+        }
+
+        // Fetch all batches to deduct stock FEFO
+        const batches = await trx("medicine_stock")
+          .where({ medicine_id: medicineId })
+          .orderBy("expiry_date", "asc")
+          .forUpdate();
+
+        const totalAvailable = batches.reduce((acc, curr) => acc + curr.quantity, 0);
+        if (totalAvailable < Math.abs(quantityChange)) {
+          throw new BadRequestError(`Insufficient stock. Available: ${totalAvailable}, Requested reduction: ${Math.abs(quantityChange)}`);
+        }
+
+        let remainingToDeduct = Math.abs(quantityChange);
+        for (const b of batches) {
+          if (remainingToDeduct <= 0) break;
+          if (b.quantity >= remainingToDeduct) {
+            await trx("medicine_stock")
+              .where({ id: b.id })
+              .update({ quantity: b.quantity - remainingToDeduct, updated_at: db.fn.now() });
+            remainingToDeduct = 0;
+          } else {
+            remainingToDeduct -= b.quantity;
+            await trx("medicine_stock")
+              .where({ id: b.id })
+              .update({ quantity: 0, updated_at: db.fn.now() });
+          }
+        }
+      }
+
+      return { success: true };
+    });
+  }
 }
 
 module.exports = new PharmacyService();
