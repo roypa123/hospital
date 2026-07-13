@@ -100,6 +100,8 @@ export const api = {
     getInvoice: (id: string) => apiClient.get<ApiResponse>(`/billing/${id}`).then(r => r.data),
     payInvoice: (id: string, data: any) => apiClient.post<ApiResponse>(`/billing/${id}/pay`, data).then(r => r.data),
     voidInvoice: (id: string) => apiClient.delete<ApiResponse>(`/billing/${id}`).then(r => r.data),
+    createRazorpayOrder: (id: string) => apiClient.post<ApiResponse>(`/billing/${id}/razorpay/order`).then(r => r.data),
+    verifyRazorpayPayment: (id: string, data: any) => apiClient.post<ApiResponse>(`/billing/${id}/razorpay/verify`, data).then(r => r.data),
   },
   insurance: {
     getProviders: () => apiClient.get<ApiResponse>('/insurance/providers').then(r => r.data),

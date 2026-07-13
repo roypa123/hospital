@@ -3,7 +3,7 @@ const billingRepository = require("../repositories/billing.repository");
 const { NotFoundError, BadRequestError } = require("../shared/errors");
 const auditService = require("./audit.service");
 const crypto = require("crypto");
-const { razorpayInstance, keySecret, isMock } = require("../config/razorpay");
+const { razorpayInstance, keyId, keySecret, isMock } = require("../config/razorpay");
 
 class BillingService {
   /**
@@ -162,6 +162,7 @@ class BillingService {
         currency: "INR",
         receipt: billId,
         status: "created",
+        key_id: keyId
       };
     }
 
@@ -171,7 +172,10 @@ class BillingService {
         currency: "INR",
         receipt: billId,
       });
-      return order;
+      return {
+        ...order,
+        key_id: keyId
+      };
     } catch (err) {
       throw new BadRequestError(`Razorpay order creation failed: ${err.message}`);
     }

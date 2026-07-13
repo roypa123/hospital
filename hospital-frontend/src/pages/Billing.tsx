@@ -125,21 +125,91 @@ export const Billing: React.FC = () => {
       return;
     }
 
-    let mappedMethod = paymentMethod;
-    if (paymentMethod === 'upi' || paymentMethod === 'net_banking') {
-      mappedMethod = 'bank_transfer';
-    }
+    const isRazorpayMethod = ['card', 'upi', 'net_banking'].includes(paymentMethod);
 
-    try {
-      await api.billing.payInvoice(payingInvoiceId, {
-        amount: balance,
-        payment_method: mappedMethod
-      });
-      toast.success('Payment completed successfully!');
-      setPayingInvoiceId(null);
-      fetchInvoices();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Payment simulation failed');
+    if (isRazorpayMethod) {
+      try {
+        toast.info('Initializing Razorpay secure portal...');
+        const orderRes = await api.billing.createRazorpayOrder(payingInvoiceId);
+        const order = orderRes.data;
+
+        if (order.id && order.id.startsWith('order_mock_')) {
+          // Mock Simulation
+          toast.info('Simulating local sandbox payment signature...');
+          const mockPaymentId = `pay_mock_${Date.now()}`;
+          await api.billing.verifyRazorpayPayment(payingInvoiceId, {
+            razorpay_order_id: order.id,
+            razorpay_payment_id: mockPaymentId,
+            razorpay_signature: 'mock_sig_pass',
+          });
+          toast.success('Mock Razorpay checkout verified successfully!');
+          setPayingInvoiceId(null);
+          fetchInvoices();
+          return;
+        }
+
+        // Live Razorpay Flow
+        const loaded = await new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+        if (!loaded) {
+          toast.error('Failed to load Razorpay checkout script');
+          return;
+        }
+
+        const options = {
+          key: order.key_id || 'rzp_test_mock_key_id',
+          amount: order.amount,
+          currency: order.currency,
+          name: 'Aura Health',
+          description: `Invoice Payment - ${invoice.id.substring(0, 8)}`,
+          order_id: order.id,
+          handler: async (response: any) => {
+            try {
+              await api.billing.verifyRazorpayPayment(payingInvoiceId, {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+              toast.success('Razorpay payment verified & completed successfully!');
+              setPayingInvoiceId(null);
+              fetchInvoices();
+            } catch (err: any) {
+              toast.error(err.response?.data?.message || 'Signature validation failed');
+            }
+          },
+          prefill: {
+            name: `${user?.first_name} ${user?.last_name}`,
+            email: user?.email,
+          },
+          theme: {
+            color: '#10b981',
+          },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Razorpay initialization failed');
+      }
+    } else {
+      // Cash & Manual flows
+      try {
+        await api.billing.payInvoice(payingInvoiceId, {
+          amount: balance,
+          payment_method: paymentMethod
+        });
+        toast.success('Manual payment recorded successfully!');
+        setPayingInvoiceId(null);
+        fetchInvoices();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Payment recording failed');
+      }
     }
   };
 
