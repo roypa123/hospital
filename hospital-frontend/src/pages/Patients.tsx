@@ -417,6 +417,7 @@ export const Patients: React.FC = () => {
                     name="date_of_birth"
                     value={newPatient.date_of_birth}
                     onChange={handleInputChange}
+                    onClick={(e) => e.currentTarget.showPicker?.()}
                     className="bg-slate-950/40 border-slate-800 text-white rounded-xl text-xs"
                     required
                   />

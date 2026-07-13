@@ -6,7 +6,7 @@ class EmailService {
    * Sends email verification token/link
    */
   async sendVerificationEmail(email, token) {
-    const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${token}`;
+    const verificationLink = `http://localhost:5173/verify-email?token=${token}`;
     const mailOptions = {
       to: email,
       from,
@@ -33,7 +33,7 @@ class EmailService {
    * Sends password reset token/link
    */
   async sendPasswordResetEmail(email, token) {
-    const resetLink = `http://localhost:3000/api/auth/reset-password?token=${token}`;
+    const resetLink = `http://localhost:5173/reset-password?token=${token}`;
     const mailOptions = {
       to: email,
       from,

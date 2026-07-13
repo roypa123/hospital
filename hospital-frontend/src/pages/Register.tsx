@@ -102,7 +102,7 @@ export const Register: React.FC = () => {
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">First Name</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                       <Input
                         type="text"
                         name="first_name"
@@ -118,7 +118,7 @@ export const Register: React.FC = () => {
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Last Name</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                       <Input
                         type="text"
                         name="last_name"
@@ -134,7 +134,7 @@ export const Register: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                     <Input
                       type="email"
                       name="email"
@@ -150,7 +150,7 @@ export const Register: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                     <Input
                       type="password"
                       name="password"
@@ -166,12 +166,13 @@ export const Register: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Date of Birth</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                     <Input
                       type="date"
                       name="date_of_birth"
                       value={formData.date_of_birth}
                       onChange={handleInputChange}
+                      onClick={(e) => e.currentTarget.showPicker?.()}
                       className="pl-10 bg-slate-950/40 border-slate-800 text-slate-200 placeholder:text-slate-655 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 rounded-xl"
                       required
                     />
@@ -197,7 +198,7 @@ export const Register: React.FC = () => {
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Blood Group</label>
                     <div className="relative">
-                      <Droplet className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                      <Droplet className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                       <select
                         name="blood_group"
                         value={formData.blood_group}

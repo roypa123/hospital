@@ -85,7 +85,7 @@ export const Login: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                   <Input
                     type="email"
                     placeholder="name@hospital.com"
@@ -108,7 +108,7 @@ export const Login: React.FC = () => {
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                   <Input
                     type="password"
                     placeholder="••••••••"
@@ -141,7 +141,7 @@ export const Login: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300">OTP Code</label>
                 <div className="relative">
-                  <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                  <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
                   <Input
                     type="text"
                     maxLength={6}

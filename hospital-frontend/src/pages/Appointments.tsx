@@ -204,6 +204,7 @@ export const Appointments: React.FC = () => {
                   value={selectedDate}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setSelectedDate(e.target.value)}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
                   className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl"
                 />
               </div>
