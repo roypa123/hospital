@@ -95,11 +95,11 @@ export const api = {
     approveTest: (id: string) => apiClient.post<ApiResponse>(`/laboratory/${id}/approve`).then(r => r.data),
   },
   billing: {
-    listInvoices: () => apiClient.get<ApiResponse>('/billing/invoices').then(r => r.data),
-    createInvoice: (data: any) => apiClient.post<ApiResponse>('/billing/invoices', data).then(r => r.data),
-    getInvoice: (id: string) => apiClient.get<ApiResponse>(`/billing/invoices/${id}`).then(r => r.data),
-    payInvoice: (id: string, data: any) => apiClient.post<ApiResponse>(`/billing/invoices/${id}/pay`, data).then(r => r.data),
-    voidInvoice: (id: string) => apiClient.delete<ApiResponse>(`/billing/invoices/${id}/void`).then(r => r.data),
+    listInvoices: () => apiClient.get<ApiResponse>('/billing').then(r => r.data),
+    createInvoice: (data: any) => apiClient.post<ApiResponse>('/billing', data).then(r => r.data),
+    getInvoice: (id: string) => apiClient.get<ApiResponse>(`/billing/${id}`).then(r => r.data),
+    payInvoice: (id: string, data: any) => apiClient.post<ApiResponse>(`/billing/${id}/pay`, data).then(r => r.data),
+    voidInvoice: (id: string) => apiClient.delete<ApiResponse>(`/billing/${id}`).then(r => r.data),
   },
   insurance: {
     getProviders: () => apiClient.get<ApiResponse>('/insurance/providers').then(r => r.data),

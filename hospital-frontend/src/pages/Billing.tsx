@@ -89,8 +89,14 @@ export const Billing: React.FC = () => {
     try {
       await api.billing.createInvoice({
         patient_id: selectedPatient,
-        total_amount: parseFloat(amount),
-        description
+        items: [
+          {
+            item_name: description || 'General Medical Service',
+            item_type: 'other',
+            unit_price: parseFloat(amount),
+            quantity: 1
+          }
+        ]
       });
       toast.success('Invoice created successfully');
       setShowAddInvoice(false);
@@ -107,9 +113,27 @@ export const Billing: React.FC = () => {
     e.preventDefault();
     if (!payingInvoiceId) return;
 
+    const invoice = invoices.find(i => i.id === payingInvoiceId);
+    if (!invoice) {
+      toast.error('Invoice details not found');
+      return;
+    }
+
+    const balance = parseFloat(invoice.net_amount) - parseFloat(invoice.paid_amount || '0');
+    if (balance <= 0) {
+      toast.error('This invoice has already been fully paid');
+      return;
+    }
+
+    let mappedMethod = paymentMethod;
+    if (paymentMethod === 'upi' || paymentMethod === 'net_banking') {
+      mappedMethod = 'bank_transfer';
+    }
+
     try {
       await api.billing.payInvoice(payingInvoiceId, {
-        payment_method: paymentMethod
+        amount: balance,
+        payment_method: mappedMethod
       });
       toast.success('Payment completed successfully!');
       setPayingInvoiceId(null);
