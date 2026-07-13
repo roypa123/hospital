@@ -17,6 +17,7 @@ import { Inventory } from '@/pages/Inventory';
 import { AuditLogs } from '@/pages/AuditLogs';
 import { Reports } from '@/pages/Reports';
 import { Profile } from '@/pages/Profile';
+import { Users } from '@/pages/Users';
 
 interface RouteProps {
   children: React.ReactElement;
@@ -76,6 +77,11 @@ export const AppRoutes: React.FC = () => {
         <Route path="inventory" element={
           <ProtectedRoute allowedRoles={['ADMIN', 'PHARMACIST']}>
             <Inventory />
+          </ProtectedRoute>
+        } />
+        <Route path="users" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Users />
           </ProtectedRoute>
         } />
         <Route path="audit-logs" element={

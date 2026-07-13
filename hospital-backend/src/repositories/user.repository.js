@@ -93,14 +93,22 @@ class UserRepository {
 
   async findAll(filters = {}) {
     const query = db("users")
-      .select("users.id", "users.email", "users.first_name", "users.last_name", "users.is_active", "users.email_verified", "users.created_at")
-      .distinct();
+      .leftJoin("user_roles", "users.id", "user_roles.user_id")
+      .leftJoin("roles", "user_roles.role_id", "roles.id")
+      .select(
+        "users.id",
+        "users.email",
+        "users.first_name",
+        "users.last_name",
+        "users.is_active",
+        "users.email_verified",
+        "users.created_at",
+        db.raw("array_to_string(array_agg(roles.name), ',') as roles_list")
+      )
+      .groupBy("users.id", "users.created_at");
 
     if (filters.role) {
-      query
-        .join("user_roles", "users.id", "user_roles.user_id")
-        .join("roles", "user_roles.role_id", "roles.id")
-        .where("roles.name", filters.role.toUpperCase());
+      query.where("roles.name", filters.role.toUpperCase());
     }
 
     if (filters.is_active !== undefined && filters.is_active !== "") {

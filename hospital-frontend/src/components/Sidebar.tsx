@@ -72,6 +72,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       show: hasRole(['ADMIN', 'PHARMACIST'])
     },
     {
+      name: 'System Users',
+      path: '/users',
+      icon: Users,
+      show: hasRole(['ADMIN'])
+    },
+    {
       name: 'Audit Logs',
       path: '/audit-logs',
       icon: ShieldAlert,

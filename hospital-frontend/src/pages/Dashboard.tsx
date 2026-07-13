@@ -98,14 +98,16 @@ export const Dashboard: React.FC = () => {
     const { overview, financials, appointments_by_status, revenue_by_method } = data;
     
     // Map data for charts
-    const statusChartData = appointments_by_status?.map((item: any) => ({
-      name: item.status.replace('_', ' ').toUpperCase(),
-      value: parseInt(item.count)
-    })) || [];
+    const statusChartData = appointments_by_status 
+      ? Object.entries(appointments_by_status).map(([status, count]) => ({
+          name: status.replace('_', ' ').toUpperCase(),
+          value: Number(count)
+        }))
+      : [];
 
     const methodChartData = revenue_by_method?.map((item: any) => ({
-      name: item.payment_method.replace('_', ' ').toUpperCase(),
-      value: parseFloat(item.revenue)
+      name: (item.payment_method || 'UNKNOWN').replace('_', ' ').toUpperCase(),
+      value: parseFloat(item.total_amount || 0)
     })) || [];
 
     const totalRevenue = financials ? parseFloat(financials.total_paid) : 0;
@@ -117,7 +119,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Admin Operations Panel</h1>
-            <p className="text-sm text-slate-550 dark:text-slate-400">Hospital occupancy, staffing, financials, and logs overview.</p>
+            <p className="text-sm text-slate-555 dark:text-slate-400">Hospital occupancy, staffing, financials, and logs overview.</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-xs font-semibold rounded-full select-none">
             <Sparkles className="w-3.5 h-3.5" /> Operations System Active
@@ -126,9 +128,9 @@ export const Dashboard: React.FC = () => {
 
         {/* Metrics Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {renderMetric('Total Patients', overview?.patients_count || 0, 'registered users', <Users className="w-5 h-5 text-emerald-500" />)}
-          {renderMetric('Total Doctors', overview?.doctors_count || 0, 'medical practitioners', <Stethoscope className="w-5 h-5 text-teal-500" />)}
-          {renderMetric('Total Bookings', overview?.appointments_count || 0, 'consultation tickets', <CalendarDays className="w-5 h-5 text-indigo-500" />)}
+          {renderMetric('Total Patients', overview?.total_patients || 0, 'registered users', <Users className="w-5 h-5 text-emerald-500" />)}
+          {renderMetric('Total Doctors', overview?.total_doctors || 0, 'medical practitioners', <Stethoscope className="w-5 h-5 text-teal-500" />)}
+          {renderMetric('Total Bookings', overview?.total_appointments || 0, 'consultation tickets', <CalendarDays className="w-5 h-5 text-indigo-500" />)}
           {renderMetric('Net Collections', `$${totalRevenue.toLocaleString()}`, `Pending: $${pendingRevenue.toLocaleString()}`, <DollarSign className="w-5 h-5 text-amber-500" />)}
         </div>
 
