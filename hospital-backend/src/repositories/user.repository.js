@@ -14,6 +14,11 @@ class UserRepository {
       .where({ id })
       .first();
 
+    if (user) {
+      const mfa = await db("two_factor_auth").where({ user_id: user.id, enabled: true }).first();
+      user.two_factor_enabled = !!mfa;
+    }
+
     return user;
   }
 
@@ -21,6 +26,11 @@ class UserRepository {
     const user = await db("users")
       .where({ email })
       .first();
+
+    if (user) {
+      const mfa = await db("two_factor_auth").where({ user_id: user.id, enabled: true }).first();
+      user.two_factor_enabled = !!mfa;
+    }
 
     return user;
   }

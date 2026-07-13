@@ -12,7 +12,8 @@ import {
   ClipboardList, 
   RefreshCw, 
   PlaySquare, 
-  CheckCheck
+  CheckCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,9 +35,15 @@ export const Appointments: React.FC = () => {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [reason, setReason] = useState('');
   
-  // Loading
   const [loadingAppts, setLoadingAppts] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsFetched, setSlotsFetched] = useState(false);
+
+  useEffect(() => {
+    setSlots([]);
+    setSlotsFetched(false);
+    setSelectedSlot('');
+  }, [selectedDoctor, selectedDate]);
 
   const fetchAppointments = async () => {
     setLoadingAppts(true);
@@ -73,9 +80,11 @@ export const Appointments: React.FC = () => {
       return;
     }
     setLoadingSlots(true);
+    setSlotsFetched(false);
     try {
       const response = await api.appointments.getSlots(selectedDoctor, selectedDate);
       setSlots(response.data || []);
+      setSlotsFetched(true);
     } catch (e: any) {
       toast.error('Failed to load available slots');
     } finally {
@@ -231,6 +240,18 @@ export const Appointments: React.FC = () => {
           </Card>
 
           {/* Slot Selection Block */}
+          {slotsFetched && slots.length === 0 && (
+            <Card className="backdrop-blur-md bg-white/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
+              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-xs flex flex-col items-center justify-center space-y-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <p className="font-bold text-slate-900 dark:text-white">No time slots available</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-[250px] mx-auto leading-relaxed">
+                  The selected doctor may not be scheduled to work on this day, or all slots are already booked.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {slots.length > 0 && (
             <Card className="backdrop-blur-md bg-white/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
               <CardHeader>

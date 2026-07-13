@@ -154,6 +154,19 @@ class AuthController {
   }
 
   /**
+   * Disables 2FA for user
+   */
+  async disable2FA(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const result = await authService.disable2FA(userId);
+      return sendSuccess(res, "2FA disabled successfully.", result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
    * Lists active login sessions for user
    */
   async listActiveSessions(req, res, next) {

@@ -344,6 +344,28 @@ class AuthService {
   }
 
   /**
+   * Disables 2FA for a user
+   */
+  async disable2FA(userId) {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    const existingMfa = await twoFactorRepository.findByUserId(userId);
+    if (!existingMfa || !existingMfa.enabled) {
+      throw new BadRequestError("2FA is not enabled on this account");
+    }
+
+    await twoFactorRepository.delete(userId);
+    
+    // Log audit trail
+    auditService.log(userId, "2FA_DISABLED", "users", userId);
+
+    return { success: true };
+  }
+
+  /**
    * Verifies login 2FA code
    */
   async login2FA(tempToken, token, req) {

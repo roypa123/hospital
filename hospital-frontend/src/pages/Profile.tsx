@@ -97,6 +97,16 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const handleDisable2FA = async () => {
+    try {
+      await api.auth.disable2FA();
+      toast.success('2FA disabled successfully');
+      setUserProfile({ two_factor_enabled: false });
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to disable 2FA');
+    }
+  };
+
   const qrImageUrl = mfaData?.qrURI 
     ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(mfaData.qrURI)}`
     : '';
@@ -162,12 +172,20 @@ export const Profile: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {user?.two_factor_enabled ? (
-              <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-2xl">
-                <ShieldCheck className="w-8 h-8" />
-                <div className="text-xs">
-                  <p className="font-bold">MFA Protection Active</p>
-                  <p className="text-slate-550 dark:text-slate-450 mt-0.5">Google Authenticator checks are active on logins.</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-2xl">
+                  <ShieldCheck className="w-8 h-8" />
+                  <div className="text-xs">
+                    <p className="font-bold">MFA Protection Active</p>
+                    <p className="text-slate-550 dark:text-slate-450 mt-0.5">Google Authenticator checks are active on logins.</p>
+                  </div>
                 </div>
+                <Button 
+                  onClick={handleDisable2FA}
+                  className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs py-2 font-bold cursor-pointer"
+                >
+                  Disable Google Authenticator
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">

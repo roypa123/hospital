@@ -19,6 +19,7 @@ export const api = {
     verifyEmail: (data: any) => apiClient.post<ApiResponse>('/auth/verify-email', data).then(r => r.data),
     setup2FA: () => apiClient.post<ApiResponse>('/auth/2fa/setup').then(r => r.data),
     activate2FA: (code: string) => apiClient.post<ApiResponse>('/auth/2fa/activate', { code }).then(r => r.data),
+    disable2FA: () => apiClient.post<ApiResponse>('/auth/2fa/disable').then(r => r.data),
     getSessions: () => apiClient.get<ApiResponse>('/auth/sessions').then(r => r.data),
     revokeSession: (id: string) => apiClient.delete<ApiResponse>(`/auth/sessions/${id}`).then(r => r.data),
   },

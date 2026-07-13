@@ -102,6 +102,9 @@ router.post(
   authController.activate2FA
 );
 
+// 10.5. Disable 2FA
+router.post("/2fa/disable", authenticate, authController.disable2FA);
+
 // 11. Sessions Management
 router.get("/sessions", authenticate, authController.listActiveSessions);
 router.delete("/sessions/:id", authenticate, authController.revokeSession);
