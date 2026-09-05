@@ -43,5 +43,5 @@ services:
     restart: unless-stopped
     depends_on:
       - hospital-backend
-    expose:
-      - "81"
+    ports:
+      - "5174:5174"
