@@ -16,6 +16,6 @@ RUN mkdir -p logs
 
 ENV NODE_ENV=production
 
-EXPOSE 3002
+EXPOSE 3002 3002
 
 CMD ["node", "server.js"]
