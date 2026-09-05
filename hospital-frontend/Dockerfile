@@ -8,7 +8,7 @@ RUN npm ci
 
 COPY . .
 
-EXPOSE 5173
+EXPOSE 5175
 
 # --host is required for the dev server to be reachable from outside the
 # container (Vite binds 127.0.0.1 by default).
