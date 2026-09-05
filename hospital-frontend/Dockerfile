@@ -1,30 +1,15 @@
-FROM node:22-alpine AS build
+
+FROM node:20-alpine
 
 WORKDIR /app
-
-# Match the npm version the lockfile was generated with; older npm bundled
-# with node:22-alpine resolves optional peer deps differently and rejects
-# this lockfile as out of sync.
-RUN npm install -g npm@11
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
 
-# Vite inlines env vars into the JS bundle at build time, so this must be
-# passed as a build arg (docker build --build-arg / compose build.args),
-# not a runtime container env var.
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+EXPOSE 5173
 
-RUN npm run build
-
-FROM nginx:alpine
-
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 5174
-
-CMD ["nginx", "-g", "daemon off;"]
+# --host is required for the dev server to be reachable from outside the
+# container (Vite binds 127.0.0.1 by default).
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
