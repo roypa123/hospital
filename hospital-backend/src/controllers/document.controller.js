@@ -1,4 +1,3 @@
-const fs = require("fs");
 const documentService = require("../services/document.service");
 const patientRepository = require("../repositories/patient.repository");
 const storageService = require("../services/storage.service");
@@ -14,10 +13,6 @@ class DocumentController {
 
       const { patient_id, document_type } = req.body;
       if (!patient_id) {
-        // Remove parsed file if validation fail
-        if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
         throw new BadRequestError("patient_id is required");
       }
 
@@ -75,8 +70,8 @@ class DocumentController {
       res.setHeader("Content-Type", doc.mime_type);
 
       try {
-        const minioKey = doc.file_path.startsWith("minio://") ? doc.file_path.replace("minio://", "") : null;
-        const fileStream = await storageService.getFileStream(minioKey, doc.file_path);
+        const minioKey = doc.file_path.replace("minio://", "");
+        const fileStream = await storageService.getFileStream(minioKey);
         fileStream.pipe(res);
       } catch (err) {
         return res.status(404).json({ success: false, message: "Physical file not found in storage" });

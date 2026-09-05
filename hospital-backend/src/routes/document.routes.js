@@ -1,30 +1,14 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const documentController = require("../controllers/document.controller");
 const { authenticate } = require("../middleware/rbac");
 const { BadRequestError } = require("../shared/errors");
 
 const router = express.Router();
 
-// Ensure local mock storage folder exists
-const uploadDir = path.join(__dirname, "../../../uploads/medical_documents");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer Disk storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
-  },
-});
+// In-memory storage: files are buffered in RAM and streamed straight to MinIO,
+// never touching local disk.
+const storage = multer.memoryStorage();
 
 // Multer Filter: Enforce PDF, PNG, JPG, GIF
 const fileFilter = (req, file, cb) => {

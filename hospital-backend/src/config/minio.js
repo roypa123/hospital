@@ -22,7 +22,7 @@ async function initMinio() {
     }
     return true;
   } catch (err) {
-    logger.warn(`MinIO initialization failed (running in local filesystem fallback mode): ${err.message}`);
+    logger.error(`MinIO initialization failed: ${err.message}. Document uploads/downloads will fail until MinIO is reachable.`);
     return false;
   }
 }

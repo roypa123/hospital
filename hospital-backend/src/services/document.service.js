@@ -1,4 +1,5 @@
-const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 const documentRepository = require("../repositories/document.repository");
 const patientRepository = require("../repositories/patient.repository");
 const storageService = require("./storage.service");
@@ -10,14 +11,13 @@ class DocumentService {
     // 1. Verify patient profile exists
     const patient = await patientRepository.findById(patientId);
     if (!patient) {
-      // Remove temporary upload file if patient check fails to save disk space
-      if (fileData.path && fs.existsSync(fileData.path)) {
-        fs.unlinkSync(fileData.path);
-      }
       throw new NotFoundError("Patient profile not found");
     }
 
-    const uploadResult = await storageService.uploadFile(fileData.filename, fileData.path, fileData.mimetype);
+    const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+    const fileKey = `${uniqueSuffix}${path.extname(fileData.originalname)}`;
+
+    const uploadResult = await storageService.uploadFile(fileKey, fileData.buffer, fileData.mimetype);
 
     return await documentRepository.create({
       patient_id: patientId,
@@ -53,8 +53,8 @@ class DocumentService {
     }
 
     // 1. Remove file from storage
-    const minioKey = doc.file_path.startsWith("minio://") ? doc.file_path.replace("minio://", "") : null;
-    await storageService.deleteFile(minioKey, doc.file_path);
+    const minioKey = doc.file_path.replace("minio://", "");
+    await storageService.deleteFile(minioKey);
 
     // 2. Remove metadata row from database registry
     return await documentRepository.delete(id);
