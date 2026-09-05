@@ -44,4 +44,4 @@ services:
     depends_on:
       - hospital-backend
     expose:
-      - "80"
+      - "81"
